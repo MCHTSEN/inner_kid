@@ -131,9 +131,11 @@ class _ProgressIndicatorWidgetState
                 borderRadius: BorderRadius.circular(3),
               ),
               child: Stack(
+                alignment: Alignment.centerLeft,
                 children: [
                   // Progress fill
                   FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
                     widthFactor: _progressAnimation.value,
                     child: Container(
                       decoration: BoxDecoration(

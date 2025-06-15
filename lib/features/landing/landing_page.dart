@@ -5,6 +5,7 @@ import 'package:inner_kid/core/theme/theme.dart';
 import 'package:inner_kid/core/constants/assets.dart';
 import 'package:inner_kid/core/constants/radius.dart';
 import 'package:inner_kid/core/extension/ui_helper_extensions.dart';
+import 'package:inner_kid/features/first_analysis/first_analysis_page.dart';
 import 'package:inner_kid/features/landing/components/analysis_card.dart';
 import 'package:inner_kid/widgets/action_menu.dart';
 import 'package:lottie/lottie.dart';
@@ -289,7 +290,12 @@ class _LandingPageState extends ConsumerState<LandingPage>
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () {
-                    // Handle button press
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const FirstAnalysisPage(),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,

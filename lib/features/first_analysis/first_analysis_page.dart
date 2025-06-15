@@ -6,7 +6,9 @@ import 'components/image_upload_widget.dart';
 import 'components/question_widget.dart';
 import 'components/progress_indicator_widget.dart';
 import 'components/native_dialogs.dart';
+import 'components/paywall_widget.dart';
 import 'viewmodel/first_analysis_viewmodel.dart';
+import '../analysis_results/analysis_results_page.dart';
 
 /// First Analysis Page - Handles image upload and questionnaire flow
 class FirstAnalysisPage extends ConsumerStatefulWidget {
@@ -21,11 +23,13 @@ class _FirstAnalysisPageState extends ConsumerState<FirstAnalysisPage>
     with TickerProviderStateMixin {
   late AnimationController _pageController;
   late Animation<double> _fadeAnimation;
+  late ScrollController _scrollController;
 
   @override
   void initState() {
     super.initState();
     _initAnimations();
+    _scrollController = ScrollController();
   }
 
   void _initAnimations() {
@@ -51,6 +55,7 @@ class _FirstAnalysisPageState extends ConsumerState<FirstAnalysisPage>
   @override
   void dispose() {
     _pageController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -75,6 +80,7 @@ class _FirstAnalysisPageState extends ConsumerState<FirstAnalysisPage>
                 // Content
                 Expanded(
                   child: SingleChildScrollView(
+                    controller: _scrollController,
                     physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.all(20),
                     child: Column(
@@ -134,17 +140,6 @@ class _FirstAnalysisPageState extends ConsumerState<FirstAnalysisPage>
           // Top row with back button, title, and reset
           Row(
             children: [
-              // Back button
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(
-                  Icons.arrow_back_ios,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-
-              const SizedBox(width: 8),
-
               // Title
               Expanded(
                 child: Column(
@@ -243,6 +238,7 @@ class _FirstAnalysisPageState extends ConsumerState<FirstAnalysisPage>
             questionNumber: index + 1,
             onAnswerSelected: (answer) {
               viewModel.answerQuestion(question.id, answer);
+              _scrollToNextQuestion();
             },
           );
         }).toList(),
@@ -255,14 +251,8 @@ class _FirstAnalysisPageState extends ConsumerState<FirstAnalysisPage>
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: ElevatedButton(
-        onPressed: state.isLoading
-            ? null
-            : () async {
-                await viewModel.submitAnalysis();
-                if (mounted) {
-                  _showSuccessDialog(context);
-                }
-              },
+        onPressed:
+            state.isLoading ? null : () => _showPaywallSheet(context, state),
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 18),
           shape: RoundedRectangleBorder(
@@ -353,6 +343,19 @@ class _FirstAnalysisPageState extends ConsumerState<FirstAnalysisPage>
     );
   }
 
+  // Auto-scroll functionality
+  void _scrollToNextQuestion() {
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.offset + 120, // Scroll down by 120 pixels
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
+  }
+
   // Helper methods
   double _calculateProgress(state) {
     if (!state.isImageUploaded && state.questions.isEmpty) return 0.0;
@@ -386,6 +389,39 @@ class _FirstAnalysisPageState extends ConsumerState<FirstAnalysisPage>
     if (shouldReset) {
       ref.read(firstAnalysisViewModelProvider.notifier).reset();
     }
+  }
+
+  void _showPaywallSheet(BuildContext context, state) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => PaywallWidget(
+        onPaymentSuccess: () {
+          Navigator.pop(context); // Close paywall
+          _navigateToResults(context, state);
+        },
+        onDismiss: () => Navigator.pop(context),
+      ),
+    );
+  }
+
+  void _navigateToResults(BuildContext context, state) {
+    // Convert answered questions to a map
+    final Map<String, String> analysisData = {};
+    for (final question in state.answeredQuestions) {
+      analysisData[question.question] = question.selectedAnswer ?? '';
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AnalysisResultsPage(
+          analyzedImage: state.uploadedImage,
+          analysisData: analysisData,
+        ),
+      ),
+    );
   }
 
   void _showSuccessDialog(BuildContext context) {

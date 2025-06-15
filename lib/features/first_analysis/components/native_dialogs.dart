@@ -6,13 +6,17 @@ import 'package:inner_kid/core/theme/theme.dart';
 
 class NativeDialogs {
 
+  static bool isIOS(BuildContext context) {
+    return Theme.of(context).platform == TargetPlatform.iOS;
+  }
+
   /// Show native image picker action sheet
   static Future<void> showImagePickerActionSheet({
     required BuildContext context,
     required VoidCallback onGalleryTap,
     required VoidCallback onCameraTap,
   }) async {
-    if (Platform.isIOS) {
+    if (isIOS(context)) {
       await showCupertinoModalPopup<void>(
         context: context,
         builder: (BuildContext context) => CupertinoActionSheet(
@@ -111,7 +115,7 @@ class NativeDialogs {
   static Future<bool> showResetConfirmationDialog({
     required BuildContext context,
   }) async {
-    if (Platform.isIOS) {
+    if (isIOS(context)) {
       return await showCupertinoDialog<bool>(
             context: context,
             builder: (BuildContext context) => CupertinoAlertDialog(
@@ -164,7 +168,7 @@ class NativeDialogs {
     required String title,
     required String message,
   }) async {
-    if (Platform.isIOS) {
+    if (isIOS(context)) {
       await showCupertinoDialog<void>(
         context: context,
         barrierDismissible: false,

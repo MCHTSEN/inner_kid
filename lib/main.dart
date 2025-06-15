@@ -17,7 +17,7 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Inner Kid',
       theme: AppTheme.lightTheme,
-      home: const FirstAnalysisPage(),
+      home: const LandingPage(),
     );
   }
 }
