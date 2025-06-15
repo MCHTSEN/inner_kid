@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_kid/core/theme/theme.dart';
+import 'package:inner_kid/features/first_analysis/first_analysis_page.dart';
 import 'package:inner_kid/features/landing/landing_page.dart';
 
 void main() {
@@ -16,7 +17,7 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Inner Kid',
       theme: AppTheme.lightTheme,
-      home: const LandingPage(),
+      home: const FirstAnalysisPage(),
     );
   }
 }

@@ -21,6 +21,8 @@ dependencies:
   lottie: ^3.3.1
   google_fonts: ^6.1.0
 
+  figma_squircle: ^0.6.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
