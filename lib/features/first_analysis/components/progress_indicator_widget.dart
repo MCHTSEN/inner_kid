@@ -78,148 +78,76 @@ class _ProgressIndicatorWidgetState
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: AppStyles.cardDecoration,
-      child: Column(
-        children: [
-          // Header
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  gradient: AppTheme.primaryGradient,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.analytics_outlined,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Analiz İlerlemesi',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      '${widget.currentStep} / ${widget.totalSteps + (widget.showImageStep ? 1 : 0)} adım tamamlandı',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Percentage
-              Text(
-                '${(widget.progress * 100).toInt()}%',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.primaryColor,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Progress bar
-          AnimatedBuilder(
-            animation: _progressAnimation,
-            builder: (context, child) {
-              return Column(
+    return Column(
+      children: [
+        // Compact header for app bar
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Progress bar track
-                  Container(
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceColor,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Stack(
-                      children: [
-                        // Progress fill
-                        FractionallySizedBox(
-                          widthFactor: _progressAnimation.value,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: AppTheme.primaryGradient,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                        ),
-                      ],
+                  Text(
+                    'Analiz İlerlemesi',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
-
-                  const SizedBox(height: 12),
-
-                  // Steps indicator
-                  _buildStepsIndicator(),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStepsIndicator() {
-    final totalSteps = widget.totalSteps + (widget.showImageStep ? 1 : 0);
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: List.generate(totalSteps, (index) {
-        final isCompleted = index < widget.currentStep;
-        final isCurrent = index == widget.currentStep - 1;
-
-        return Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            gradient:
-                isCompleted || isCurrent ? AppTheme.primaryGradient : null,
-            color: !isCompleted && !isCurrent
-                ? AppTheme.textTertiary.withOpacity(0.3)
-                : null,
-            borderRadius: BorderRadius.circular(12),
-            border: isCurrent && !isCompleted
-                ? Border.all(color: AppTheme.primaryColor, width: 2)
-                : null,
-          ),
-          child: Center(
-            child: isCompleted
-                ? const Icon(
-                    Icons.check,
-                    color: Colors.white,
-                    size: 14,
-                  )
-                : Text(
-                    '${index + 1}',
+                  Text(
+                    '${widget.currentStep} / ${widget.totalSteps + (widget.showImageStep ? 1 : 0)} adım',
                     style: GoogleFonts.poppins(
                       fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: isCurrent ? Colors.white : AppTheme.textTertiary,
+                      color: AppTheme.textSecondary,
                     ),
                   ),
-          ),
-        );
-      }),
+                ],
+              ),
+            ),
+
+            // Percentage
+            Text(
+              '${(widget.progress * 100).toInt()}%',
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 12),
+
+        // Progress bar only
+        AnimatedBuilder(
+          animation: _progressAnimation,
+          builder: (context, child) {
+            return Container(
+              height: 6,
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceColor,
+                borderRadius: BorderRadius.circular(3),
+              ),
+              child: Stack(
+                children: [
+                  // Progress fill
+                  FractionallySizedBox(
+                    widthFactor: _progressAnimation.value,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: AppTheme.primaryGradient,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }

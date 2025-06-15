@@ -75,6 +75,9 @@ class _QuestionWidgetState extends ConsumerState<QuestionWidget>
       _animationController.forward();
     } else if (!widget.isActive && oldWidget.isActive) {
       _animationController.reverse();
+    } else if (widget.isAnswered && !oldWidget.isAnswered) {
+      // Animate closing when question is answered
+      _animationController.reverse();
     }
   }
 

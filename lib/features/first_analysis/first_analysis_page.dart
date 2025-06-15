@@ -5,6 +5,7 @@ import 'package:inner_kid/core/theme/theme.dart';
 import 'components/image_upload_widget.dart';
 import 'components/question_widget.dart';
 import 'components/progress_indicator_widget.dart';
+import 'components/native_dialogs.dart';
 import 'viewmodel/first_analysis_viewmodel.dart';
 
 /// First Analysis Page - Handles image upload and questionnaire flow
@@ -78,16 +79,6 @@ class _FirstAnalysisPageState extends ConsumerState<FirstAnalysisPage>
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       children: [
-                        // Progress Indicator (shown after image upload)
-                        if (state.isImageUploaded) ...[
-                          ProgressIndicatorWidget(
-                            progress: _calculateProgress(state),
-                            totalSteps: state.questions.length,
-                            currentStep: _calculateCurrentStep(state),
-                          ),
-                          const SizedBox(height: 20),
-                        ],
-
                         // Image Upload Widget
                         GestureDetector(
                           onTap: () =>
@@ -95,8 +86,11 @@ class _FirstAnalysisPageState extends ConsumerState<FirstAnalysisPage>
                           child: ImageUploadWidget(
                             uploadedImage: state.uploadedImage,
                             isLoading: state.isLoading,
+                            isCompact: state.isImageUploaded,
                             onGalleryTap: viewModel.uploadImageFromGallery,
                             onCameraTap: viewModel.uploadImageFromCamera,
+                            onChangeTap: () =>
+                                _showImageUploadOptions(context, viewModel),
                           ),
                         ),
 
@@ -135,52 +129,68 @@ class _FirstAnalysisPageState extends ConsumerState<FirstAnalysisPage>
   Widget _buildAppBar(BuildContext context, state) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: Row(
+      child: Column(
         children: [
-          // Back button
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(
-              Icons.arrow_back_ios,
-              color: AppTheme.textPrimary,
-            ),
-          ),
-
-          const SizedBox(width: 8),
-
-          // Title
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'İlk Analiz',
-                  style: GoogleFonts.poppins(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
-                  ),
+          // Top row with back button, title, and reset
+          Row(
+            children: [
+              // Back button
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  color: AppTheme.textPrimary,
                 ),
-                Text(
-                  'Çizimi yükleyin ve soruları yanıtlayın',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
+              ),
+
+              const SizedBox(width: 8),
+
+              // Title
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'İlk Analiz',
+                      style: GoogleFonts.poppins(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    if (!state.isImageUploaded)
+                      Text(
+                        'Çizimi yükleyin ve soruları yanıtlayın',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+
+              // Reset button (shown if analysis started)
+              if (state.isImageUploaded)
+                IconButton(
+                  onPressed: () => _showResetDialog(context),
+                  icon: const Icon(
+                    Icons.refresh,
                     color: AppTheme.textSecondary,
                   ),
                 ),
-              ],
-            ),
+            ],
           ),
 
-          // Reset button (shown if analysis started)
-          if (state.isImageUploaded)
-            IconButton(
-              onPressed: () => _showResetDialog(context),
-              icon: const Icon(
-                Icons.refresh,
-                color: AppTheme.textSecondary,
-              ),
+          // Progress indicator (shown after image upload)
+          if (state.isImageUploaded) ...[
+            const SizedBox(height: 16),
+            ProgressIndicatorWidget(
+              progress: _calculateProgress(state),
+              totalSteps: state.questions.length,
+              currentStep: _calculateCurrentStep(state),
             ),
+          ],
         ],
       ),
     );
@@ -361,96 +371,28 @@ class _FirstAnalysisPageState extends ConsumerState<FirstAnalysisPage>
   }
 
   void _showImageUploadOptions(BuildContext context, viewModel) {
-    if (viewModel.state.uploadedImage != null) return;
-
-    showModalBottomSheet(
+    NativeDialogs.showImagePickerActionSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => ImageUploadOptionsSheet(
-        onGalleryTap: () {
-          Navigator.pop(context);
-          viewModel.uploadImageFromGallery();
-        },
-        onCameraTap: () {
-          Navigator.pop(context);
-          viewModel.uploadImageFromCamera();
-        },
-      ),
+      onGalleryTap: viewModel.uploadImageFromGallery,
+      onCameraTap: viewModel.uploadImageFromCamera,
     );
   }
 
-  void _showResetDialog(BuildContext context) {
-    showDialog(
+  void _showResetDialog(BuildContext context) async {
+    final shouldReset = await NativeDialogs.showResetConfirmationDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Analizi Sıfırla',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-        ),
-        content: Text(
-          'Tüm ilerlemeniz silinecek. Emin misiniz?',
-          style: GoogleFonts.poppins(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('İptal', style: GoogleFonts.poppins()),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ref.read(firstAnalysisViewModelProvider.notifier).reset();
-            },
-            child: Text(
-              'Sıfırla',
-              style: GoogleFonts.poppins(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
     );
+
+    if (shouldReset) {
+      ref.read(firstAnalysisViewModelProvider.notifier).reset();
+    }
   }
 
   void _showSuccessDialog(BuildContext context) {
-    showDialog(
+    NativeDialogs.showSuccessDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.check_circle,
-              color: Colors.green,
-              size: 64,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Başarılı!',
-              style: GoogleFonts.poppins(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Analiziniz başarıyla gönderildi.',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Tamam',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
+      title: 'Başarılı!',
+      message: 'Analiziniz başarıyla gönderildi.',
     );
   }
 }
