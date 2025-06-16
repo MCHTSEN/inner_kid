@@ -3,16 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:inner_kid/core/theme/theme.dart';
+import 'dart:ui';
+import '../first_analysis/components/paywall_widget.dart';
 
 /// Analysis results page showing detailed psychological insights
 class AnalysisResultsPage extends ConsumerStatefulWidget {
   final File? analyzedImage;
   final Map<String, String>? analysisData;
+  final bool isBlurred;
+  final VoidCallback? onPremiumUnlock;
 
   const AnalysisResultsPage({
     super.key,
     this.analyzedImage,
     this.analysisData,
+    this.isBlurred = false,
+    this.onPremiumUnlock,
   });
 
   @override
@@ -26,10 +32,24 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
+  bool _isPremiumUnlocked = false;
+
   @override
   void initState() {
     super.initState();
     _initAnimations();
+    _isPremiumUnlocked = !widget.isBlurred;
+
+    // Show paywall after content is displayed if blurred
+    if (widget.isBlurred) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            _showPaywall();
+          }
+        });
+      });
+    }
   }
 
   void _initAnimations() {
@@ -97,38 +117,45 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage>
                           padding: const EdgeInsets.all(20),
                           child: Column(
                             children: [
-                              // Success Header
+                              // Success Header (always visible)
                               _buildSuccessHeader(),
 
                               const SizedBox(height: 24),
 
-                              // Analysis Overview
-                              _buildAnalysisOverview(),
+                              // Premium gated content
+                              _buildBlurWrapper(
+                                child: Column(
+                                  children: [
+                                    // Analysis Overview
+                                    _buildAnalysisOverview(),
 
-                              const SizedBox(height: 24),
+                                    const SizedBox(height: 24),
 
-                              // Psychological Insights
-                              _buildPsychologicalInsights(),
+                                    // Psychological Insights
+                                    _buildPsychologicalInsights(),
 
-                              const SizedBox(height: 24),
+                                    const SizedBox(height: 24),
 
-                              // Development Recommendations
-                              _buildDevelopmentRecommendations(),
+                                    // Development Recommendations
+                                    _buildDevelopmentRecommendations(),
 
-                              const SizedBox(height: 24),
+                                    const SizedBox(height: 24),
 
-                              // Activities & Games
-                              _buildActivitiesSection(),
+                                    // Activities & Games
+                                    _buildActivitiesSection(),
 
-                              const SizedBox(height: 24),
+                                    const SizedBox(height: 24),
 
-                              // Progress Tracking
-                              _buildProgressTracking(),
+                                    // Progress Tracking
+                                    _buildProgressTracking(),
 
-                              const SizedBox(height: 32),
+                                    const SizedBox(height: 32),
 
-                              // Action Buttons
-                              _buildActionButtons(),
+                                    // Action Buttons
+                                    _buildActionButtons(),
+                                  ],
+                                ),
+                              ),
 
                               const SizedBox(height: 40),
                             ],
@@ -801,6 +828,120 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage>
         ),
         backgroundColor: Colors.green,
       ),
+    );
+  }
+
+  void _showPaywall() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => PaywallWidget(
+        onPaymentSuccess: () {
+          Navigator.pop(context); // Close paywall
+          setState(() {
+            _isPremiumUnlocked = true;
+          });
+          if (widget.onPremiumUnlock != null) {
+            widget.onPremiumUnlock!();
+          }
+        },
+        onDismiss: () => Navigator.pop(context),
+      ),
+    );
+  }
+
+  Widget _buildBlurWrapper({required Widget child}) {
+    if (_isPremiumUnlocked) {
+      return child;
+    }
+
+    return Stack(
+      children: [
+        // Blurred content
+        ImageFiltered(
+          imageFilter: ImageFilter.blur(sigmaX: 3.0, sigmaY: 3.0),
+          child: child,
+        ),
+
+        // Premium overlay
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Colors.white.withOpacity(0.3),
+                  Colors.white.withOpacity(0.8),
+                ],
+              ),
+            ),
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                margin: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.lock_outline,
+                      size: 48,
+                      color: AppTheme.primaryColor,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Premium İçerik',
+                      style: GoogleFonts.poppins(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Detaylı analiz sonuçlarını görmek için premium\'a geçin',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: _showPaywall,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 12,
+                        ),
+                      ),
+                      child: Text(
+                        'Premium\'a Geç',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

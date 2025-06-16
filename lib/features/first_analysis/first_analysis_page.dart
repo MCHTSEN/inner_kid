@@ -7,6 +7,7 @@ import 'components/question_widget.dart';
 import 'components/progress_indicator_widget.dart';
 import 'components/native_dialogs.dart';
 import 'components/paywall_widget.dart';
+import 'components/analysis_loading_widget.dart';
 import 'viewmodel/first_analysis_viewmodel.dart';
 import '../analysis_results/analysis_results_page.dart';
 
@@ -246,13 +247,15 @@ class _FirstAnalysisPageState extends ConsumerState<FirstAnalysisPage>
     );
   }
 
-  Widget _buildSubmitButton(BuildContext context, state, viewModel) {
+  Widget _buildSubmitButton(
+      BuildContext context, state, FirstAnalysisViewModel viewModel) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: ElevatedButton(
-        onPressed:
-            state.isLoading ? null : () => _showPaywallSheet(context, state),
+        onPressed: state.isLoading
+            ? null
+            : () => _submitAnalysis(context, state, viewModel),
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 18),
           shape: RoundedRectangleBorder(
@@ -429,6 +432,46 @@ class _FirstAnalysisPageState extends ConsumerState<FirstAnalysisPage>
       context: context,
       title: 'Başarılı!',
       message: 'Analiziniz başarıyla gönderildi.',
+    );
+  }
+
+  // New method to handle analysis submission with loading page
+  void _submitAnalysis(
+      BuildContext context, state, FirstAnalysisViewModel viewModel) async {
+    // Navigate to loading page immediately (analysis will start there)
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AnalysisLoadingWidget(),
+      ),
+    );
+
+    // If loading completed successfully, navigate to blurred results
+    if (result == true && mounted) {
+      _navigateToBlurredResults(context, state);
+    }
+  }
+
+  void _navigateToBlurredResults(BuildContext context, state) {
+    // Convert answered questions to a map
+    final Map<String, String> analysisData = {};
+    for (final question in state.answeredQuestions) {
+      analysisData[question.question] = question.selectedAnswer ?? '';
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AnalysisResultsPage(
+          analyzedImage: state.uploadedImage,
+          analysisData: analysisData,
+          isBlurred: true, // Show blurred results initially
+          onPremiumUnlock: () {
+            // Update the state to show full results
+            ref.read(firstAnalysisViewModelProvider.notifier).unlockPremium();
+          },
+        ),
+      ),
     );
   }
 }

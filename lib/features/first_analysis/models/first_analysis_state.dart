@@ -9,6 +9,9 @@ class FirstAnalysisState {
   final bool isImageUploaded;
   final bool isCompleted;
   final bool isLoading;
+  final bool isAnalyzing; // New: Analysis in progress
+  final bool isAnalysisCompleted; // New: Analysis finished
+  final bool isPremiumUnlocked; // New: Premium content unlocked
 
   const FirstAnalysisState({
     this.uploadedImage,
@@ -17,6 +20,9 @@ class FirstAnalysisState {
     this.isImageUploaded = false,
     this.isCompleted = false,
     this.isLoading = false,
+    this.isAnalyzing = false,
+    this.isAnalysisCompleted = false,
+    this.isPremiumUnlocked = false,
   });
 
   FirstAnalysisState copyWith({
@@ -26,6 +32,9 @@ class FirstAnalysisState {
     bool? isImageUploaded,
     bool? isCompleted,
     bool? isLoading,
+    bool? isAnalyzing,
+    bool? isAnalysisCompleted,
+    bool? isPremiumUnlocked,
   }) {
     return FirstAnalysisState(
       uploadedImage: uploadedImage ?? this.uploadedImage,
@@ -34,6 +43,9 @@ class FirstAnalysisState {
       isImageUploaded: isImageUploaded ?? this.isImageUploaded,
       isCompleted: isCompleted ?? this.isCompleted,
       isLoading: isLoading ?? this.isLoading,
+      isAnalyzing: isAnalyzing ?? this.isAnalyzing,
+      isAnalysisCompleted: isAnalysisCompleted ?? this.isAnalysisCompleted,
+      isPremiumUnlocked: isPremiumUnlocked ?? this.isPremiumUnlocked,
     );
   }
 

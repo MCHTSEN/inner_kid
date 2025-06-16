@@ -131,21 +131,38 @@ class FirstAnalysisViewModel extends StateNotifier<FirstAnalysisState> {
     }
 
     try {
-      state = state.copyWith(isLoading: true);
-
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Here you would typically send data to your backend
-      // For now, we'll just mark as completed
+      // Start analysis process
       state = state.copyWith(
+        isAnalyzing: true,
         isLoading: false,
         isCompleted: true,
       );
+
+      // // Simulate analysis process with longer delay for realistic feel
+      // await Future.delayed(const Duration(seconds: 8));
+
+      // Analysis completed
+      state = state.copyWith(
+        isAnalyzing: false,
+        isAnalysisCompleted: true,
+      );
     } catch (e) {
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(
+        isAnalyzing: false,
+        isLoading: false,
+      );
       // Handle error
     }
+  }
+
+  /// Unlock premium content after payment
+  void unlockPremium() {
+    state = state.copyWith(isPremiumUnlocked: true);
+  }
+
+  /// Reset premium status (for testing)
+  void resetPremium() {
+    state = state.copyWith(isPremiumUnlocked: false);
   }
 }
 
