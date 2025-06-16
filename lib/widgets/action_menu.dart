@@ -2,8 +2,8 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:inner_kid/features/ios_action_menu_app.dart';
 
 const sliderHeight = 360.0;
 const sliderWidth = 135.0;

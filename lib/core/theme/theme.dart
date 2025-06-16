@@ -38,7 +38,7 @@ class AppTheme {
 
   static ThemeData get lightTheme {
     return ThemeData(
-      platform: TargetPlatform.android,
+      // platform: TargetPlatform.android,
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryColor,

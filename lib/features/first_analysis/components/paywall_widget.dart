@@ -130,26 +130,23 @@ class _PaywallWidgetState extends ConsumerState<PaywallWidget>
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.all(20),
                       child: Column(
+                        spacing: 32,
                         children: [
                           // Hero section
                           _buildHeroSection(),
 
-                          const SizedBox(height: 32),
 
                           // Pricing plans
                           _buildPricingPlans(),
 
-                          const SizedBox(height: 32),
 
                           // Features comparison
                           _buildFeaturesSection(),
 
-                          const SizedBox(height: 32),
 
                           // Payment button
                           _buildPaymentButton(),
 
-                          const SizedBox(height: 20),
                         ],
                       ),
                     ),
@@ -239,7 +236,7 @@ class _PaywallWidgetState extends ConsumerState<PaywallWidget>
         ),
         const SizedBox(height: 16),
         SizedBox(
-          height: 280,
+          height: 320,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: _plans.length,

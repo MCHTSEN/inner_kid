@@ -1,7 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:inner_kid/core/theme/theme.dart';
+import 'package:logger/logger.dart';
 import 'components/image_upload_widget.dart';
 import 'components/question_widget.dart';
 import 'components/progress_indicator_widget.dart';
@@ -9,7 +12,7 @@ import 'components/native_dialogs.dart';
 import 'components/paywall_widget.dart';
 import 'components/analysis_loading_widget.dart';
 import 'viewmodel/first_analysis_viewmodel.dart';
-import '../analysis_results/analysis_results_page.dart';
+import '../analysis_results/analysis_results_page_refactored.dart';
 
 /// First Analysis Page - Handles image upload and questionnaire flow
 class FirstAnalysisPage extends ConsumerStatefulWidget {
@@ -25,10 +28,11 @@ class _FirstAnalysisPageState extends ConsumerState<FirstAnalysisPage>
   late AnimationController _pageController;
   late Animation<double> _fadeAnimation;
   late ScrollController _scrollController;
-
+  final _logger = Logger();
   @override
   void initState() {
     super.initState();
+    _logger.d('🔵 FirstAnalysisPage: initState called');
     _initAnimations();
     _scrollController = ScrollController();
   }
@@ -419,7 +423,7 @@ class _FirstAnalysisPageState extends ConsumerState<FirstAnalysisPage>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AnalysisResultsPage(
+        builder: (context) => AnalysisResultsPageRefactored(
           analyzedImage: state.uploadedImage,
           analysisData: analysisData,
         ),
@@ -438,6 +442,8 @@ class _FirstAnalysisPageState extends ConsumerState<FirstAnalysisPage>
   // New method to handle analysis submission with loading page
   void _submitAnalysis(
       BuildContext context, state, FirstAnalysisViewModel viewModel) async {
+    _logger.d('🔵 FirstAnalysisPage: _submitAnalysis called');
+
     // Navigate to loading page immediately (analysis will start there)
     final result = await Navigator.push(
       context,
@@ -446,32 +452,60 @@ class _FirstAnalysisPageState extends ConsumerState<FirstAnalysisPage>
       ),
     );
 
+    _logger.d('🟡 FirstAnalysisPage: Loading widget returned result: $result');
+
     // If loading completed successfully, navigate to blurred results
     if (result == true && mounted) {
+      _logger
+          .d('🟢 FirstAnalysisPage: Loading completed, navigating to results');
       _navigateToBlurredResults(context, state);
+    } else {
+      _logger.d('🔴 FirstAnalysisPage: Loading was cancelled or failed');
     }
   }
 
   void _navigateToBlurredResults(BuildContext context, state) {
+    _logger.d('🔵 FirstAnalysisPage: _navigateToBlurredResults called');
+
     // Convert answered questions to a map
     final Map<String, String> analysisData = {};
     for (final question in state.answeredQuestions) {
       analysisData[question.question] = question.selectedAnswer ?? '';
     }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AnalysisResultsPage(
-          analyzedImage: state.uploadedImage,
-          analysisData: analysisData,
-          isBlurred: true, // Show blurred results initially
-          onPremiumUnlock: () {
-            // Update the state to show full results
-            ref.read(firstAnalysisViewModelProvider.notifier).unlockPremium();
+    _logger.d('🟡 FirstAnalysisPage: Navigation data prepared:');
+    _logger.d('  - analyzedImage: ${state.uploadedImage}');
+    _logger.d('  - analysisData: $analysisData');
+    _logger.d('  - isBlurred: true');
+
+    try {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) {
+            _logger.d('🟢 FirstAnalysisPage: MaterialPageRoute builder called');
+            return AnalysisResultsPageRefactored(
+              analyzedImage: state.uploadedImage,
+              analysisData: analysisData,
+              isBlurred: true, // Show blurred results initially
+              userId:
+                  'demo-user-${DateTime.now().millisecondsSinceEpoch}', // Demo user ID for A/B testing
+              onPremiumUnlock: () {
+                _logger
+                    .d('🟢 FirstAnalysisPage: onPremiumUnlock callback called');
+                // Update the state to show full results
+                ref
+                    .read(firstAnalysisViewModelProvider.notifier)
+                    .unlockPremium();
+              },
+            );
           },
         ),
-      ),
-    );
+      );
+      _logger.d('🟢 FirstAnalysisPage: Navigation initiated successfully');
+    } catch (e, stackTrace) {
+      _logger.d('🔴 FirstAnalysisPage: Error during navigation: $e');
+      _logger.d('🔴 StackTrace: $stackTrace');
+    }
   }
 }

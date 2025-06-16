@@ -1,23 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:inner_kid/core/theme/theme.dart';
-import 'package:inner_kid/features/first_analysis/first_analysis_page.dart';
-import 'package:inner_kid/features/landing/landing_page.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:inner_kid/core/navigation/main_navigation.dart';
 
 void main() {
-  runApp(const ProviderScope(child: MainApp()));
+  runApp(
+    const ProviderScope(
+      child: InnerKidApp(),
+    ),
+  );
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class InnerKidApp extends StatelessWidget {
+  const InnerKidApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: 'Inner Kid',
-      theme: AppTheme.lightTheme,
-      home: const LandingPage(),
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        primaryColor: const Color(0xFF667EEA),
+        scaffoldBackgroundColor: const Color(0xFFF8F9FA),
+        fontFamily: GoogleFonts.nunito().fontFamily,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Color(0xFF2D3748),
+          elevation: 0,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF667EEA),
+            foregroundColor: Colors.white,
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+      ),
+      home: const MainNavigation(),
     );
   }
 }
