@@ -138,8 +138,7 @@ class FirstAnalysisViewModel extends StateNotifier<FirstAnalysisState> {
         isCompleted: true,
       );
 
-      // // Simulate analysis process with longer delay for realistic feel
-      // await Future.delayed(const Duration(seconds: 8));
+      // TODO: API CALL
 
       // Analysis completed
       state = state.copyWith(

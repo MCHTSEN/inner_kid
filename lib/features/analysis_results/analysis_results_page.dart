@@ -6,12 +6,57 @@ import 'package:inner_kid/core/theme/theme.dart';
 import 'dart:ui';
 import '../first_analysis/components/paywall_widget.dart';
 
-/// Analysis results page showing detailed psychological insights
+/// A/B Testing configuration for success header messages
+///
+/// This enum defines different message variants for A/B testing
+/// to optimize user engagement and conversion rates.
+enum SuccessHeaderVariant {
+  /// Emotional revelation message
+  emotional(
+      'Çocuğunuzun çiziminde gizli kalan duygular, artık görünür hale geliyor.'),
+
+  /// Scientific insight message
+  scientific('Bilimsel analiz ile çocuğunuzun iç dünyasını keşfedin.'),
+
+  /// Development focused message
+  development(
+      'Çocuğunuzun gelişim yolculuğunda size rehber olacak önemli ipuçları.'),
+
+  /// Achievement focused message
+  achievement('Çocuğunuzun yaratıcı potansiyeli ortaya çıktı!');
+
+  const SuccessHeaderVariant(this.message);
+
+  /// The message text to display
+  final String message;
+
+  /// Get a variant based on user ID or other criteria for A/B testing
+  ///
+  /// This can be replaced with a more sophisticated A/B testing framework
+  static SuccessHeaderVariant getVariantForUser({String? userId}) {
+    // Simple hash-based selection for demonstration
+    // In production, use proper A/B testing tools like Firebase Remote Config
+    final hash = userId?.hashCode ?? DateTime.now().millisecondsSinceEpoch;
+    const variants = SuccessHeaderVariant.values;
+    return variants[hash.abs() % variants.length];
+  }
+}
+
+/// Analysis results page showing detailed psychological insights with premium gating
+///
+/// Features:
+/// - Blurred content with premium overlay for non-premium users
+/// - Clickable blur area that triggers paywall
+/// - Premium-gated action buttons in app bar
+/// - A/B testing support for success header messages
+/// - Smooth animations and transitions
 class AnalysisResultsPage extends ConsumerStatefulWidget {
   final File? analyzedImage;
   final Map<String, String>? analysisData;
   final bool isBlurred;
   final VoidCallback? onPremiumUnlock;
+  final String? userId; // For A/B testing
+  final SuccessHeaderVariant? variant; // Override for testing
 
   const AnalysisResultsPage({
     super.key,
@@ -19,6 +64,8 @@ class AnalysisResultsPage extends ConsumerStatefulWidget {
     this.analysisData,
     this.isBlurred = false,
     this.onPremiumUnlock,
+    this.userId,
+    this.variant,
   });
 
   @override
@@ -31,6 +78,7 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  late SuccessHeaderVariant _headerVariant;
 
   bool _isPremiumUnlocked = false;
 
@@ -38,6 +86,7 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage>
   void initState() {
     super.initState();
     _initAnimations();
+    _initABTesting();
     _isPremiumUnlocked = !widget.isBlurred;
 
     // Show paywall after content is displayed if blurred
@@ -50,6 +99,12 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage>
         });
       });
     }
+  }
+
+  /// Initialize A/B testing variant for success header
+  void _initABTesting() {
+    _headerVariant = widget.variant ??
+        SuccessHeaderVariant.getVariantForUser(userId: widget.userId);
   }
 
   void _initAnimations() {
@@ -178,14 +233,6 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage>
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
         children: [
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(
-              Icons.arrow_back_ios,
-              color: AppTheme.textPrimary,
-            ),
-          ),
-          const SizedBox(width: 8),
           Expanded(
             child: Text(
               'Analiz Sonuçları',
@@ -196,20 +243,65 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage>
               ),
             ),
           ),
+          // Premium-gated share button
+          _buildPremiumActionButton(
+            icon: Icons.share,
+            onPressed: _isPremiumUnlocked ? _shareResults : _showPaywall,
+            tooltip:
+                _isPremiumUnlocked ? 'Sonuçları Paylaş' : 'Premium Gerekli',
+          ),
+          // Premium-gated download button
+          _buildPremiumActionButton(
+            icon: Icons.download,
+            onPressed: _isPremiumUnlocked ? _downloadReport : _showPaywall,
+            tooltip: _isPremiumUnlocked ? 'Raporu İndir' : 'Premium Gerekli',
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build premium-gated action button with visual feedback
+  ///
+  /// Shows different states for premium and non-premium users:
+  /// - Active state for premium users
+  /// - Dimmed state with lock icon overlay for non-premium users
+  Widget _buildPremiumActionButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    required String tooltip,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: Stack(
+        children: [
           IconButton(
-            onPressed: _shareResults,
-            icon: const Icon(
-              Icons.share,
-              color: AppTheme.textSecondary,
+            onPressed: onPressed,
+            icon: Icon(
+              icon,
+              color: _isPremiumUnlocked
+                  ? AppTheme.textSecondary
+                  : AppTheme.textSecondary.withOpacity(0.4),
             ),
           ),
-          IconButton(
-            onPressed: _downloadReport,
-            icon: const Icon(
-              Icons.download,
-              color: AppTheme.textSecondary,
+          // Lock overlay for non-premium users
+          if (!_isPremiumUnlocked)
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.lock,
+                  size: 12,
+                  color: Colors.white,
+                ),
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -262,7 +354,7 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage>
           ),
           const SizedBox(height: 8),
           Text(
-            'Çocuğunuzun çiziminden elde edilen detaylı analiz sonuçları hazır.',
+            _headerVariant.message,
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 14,
@@ -831,6 +923,135 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage>
     );
   }
 
+  /// Build blur wrapper with clickable area for premium content
+  ///
+  /// Features:
+  /// - ImageFilter.blur for content obscuring
+  /// - Clickable overlay that triggers paywall
+  /// - Visual premium indicator with call-to-action
+  /// - Gradient overlay for better readability
+  Widget _buildBlurWrapper({required Widget child}) {
+    if (_isPremiumUnlocked) {
+      return child;
+    }
+
+    return GestureDetector(
+      onTap: _showPaywall, // Make entire blur area clickable
+      child: Stack(
+        children: [
+          // Blurred content
+          ImageFiltered(
+            imageFilter: ImageFilter.blur(sigmaX: 3.0, sigmaY: 3.0),
+            child: child,
+          ),
+
+          // Clickable premium overlay
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.white.withOpacity(0.3),
+                    Colors.white.withOpacity(0.8),
+                  ],
+                ),
+              ),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  margin: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Premium icon with pulse animation
+                      TweenAnimationBuilder(
+                        duration: const Duration(seconds: 2),
+                        tween: Tween<double>(begin: 0.8, end: 1.2),
+                        curve: Curves.easeInOut,
+                        builder: (context, double scale, child) {
+                          return Transform.scale(
+                            scale: scale,
+                            child: const Icon(
+                              Icons.lock_outline,
+                              size: 48,
+                              color: AppTheme.primaryColor,
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Premium İçerik',
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Detaylı analiz sonuçlarını görmek için premium\'a geçin',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // Clickable hint
+                      Text(
+                        'Dokunarak premium\'a geçin',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: AppTheme.primaryColor,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: _showPaywall,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 12,
+                          ),
+                        ),
+                        child: Text(
+                          'Premium\'a Geç',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Show paywall modal with payment options
+  ///
+  /// Handles premium unlock and state updates
   void _showPaywall() {
     showModalBottomSheet(
       context: context,
@@ -842,106 +1063,36 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage>
           setState(() {
             _isPremiumUnlocked = true;
           });
+          // Trigger parent callback if provided
           if (widget.onPremiumUnlock != null) {
             widget.onPremiumUnlock!();
           }
+          // Show success feedback
+          _showPremiumUnlockFeedback();
         },
         onDismiss: () => Navigator.pop(context),
       ),
     );
   }
 
-  Widget _buildBlurWrapper({required Widget child}) {
-    if (_isPremiumUnlocked) {
-      return child;
-    }
-
-    return Stack(
-      children: [
-        // Blurred content
-        ImageFiltered(
-          imageFilter: ImageFilter.blur(sigmaX: 3.0, sigmaY: 3.0),
-          child: child,
-        ),
-
-        // Premium overlay
-        Positioned.fill(
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.transparent,
-                  Colors.white.withOpacity(0.3),
-                  Colors.white.withOpacity(0.8),
-                ],
-              ),
+  /// Show success feedback when premium is unlocked
+  void _showPremiumUnlockFeedback() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(
+              'Premium aktif! Tüm özellikler açıldı.',
+              style: GoogleFonts.poppins(),
             ),
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                margin: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.lock_outline,
-                      size: 48,
-                      color: AppTheme.primaryColor,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Premium İçerik',
-                      style: GoogleFonts.poppins(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Detaylı analiz sonuçlarını görmek için premium\'a geçin',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: _showPaywall,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 12,
-                        ),
-                      ),
-                      child: Text(
-                        'Premium\'a Geç',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          ],
         ),
-      ],
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
+      ),
     );
   }
 }

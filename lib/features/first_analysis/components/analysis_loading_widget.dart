@@ -29,7 +29,7 @@ class _AnalysisLoadingWidgetState extends ConsumerState<AnalysisLoadingWidget>
     _initializeSteps();
     _initAnimations();
     _startStepCycle();
-    _startAnalysis(); // Start the actual analysis
+    _startAnalysisDelayed();
   }
 
   void _initializeSteps() {
@@ -131,6 +131,12 @@ class _AnalysisLoadingWidgetState extends ConsumerState<AnalysisLoadingWidget>
         }
       });
     }
+  }
+
+  void _startAnalysisDelayed() {
+    Future(() {
+      _startAnalysis();
+    });
   }
 
   void _startAnalysis() {

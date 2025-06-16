@@ -439,7 +439,7 @@ class _FirstAnalysisPageState extends ConsumerState<FirstAnalysisPage>
   void _submitAnalysis(
       BuildContext context, state, FirstAnalysisViewModel viewModel) async {
     // Navigate to loading page immediately (analysis will start there)
-    final result = await Navigator.push(
+    final result = await Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (context) => const AnalysisLoadingWidget(),
@@ -459,13 +459,15 @@ class _FirstAnalysisPageState extends ConsumerState<FirstAnalysisPage>
       analysisData[question.question] = question.selectedAnswer ?? '';
     }
 
-    Navigator.push(
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (context) => AnalysisResultsPage(
           analyzedImage: state.uploadedImage,
           analysisData: analysisData,
           isBlurred: true, // Show blurred results initially
+          userId:
+              'demo-user-${DateTime.now().millisecondsSinceEpoch}', // Demo user ID for A/B testing
           onPremiumUnlock: () {
             // Update the state to show full results
             ref.read(firstAnalysisViewModelProvider.notifier).unlockPremium();
