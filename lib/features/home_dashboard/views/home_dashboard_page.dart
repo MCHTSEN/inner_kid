@@ -8,6 +8,7 @@ import 'package:inner_kid/features/home_dashboard/widgets/quick_analysis_section
 import 'package:inner_kid/features/home_dashboard/widgets/recent_analyses_section.dart';
 import 'package:inner_kid/features/home_dashboard/widgets/daily_recommendations.dart';
 import 'package:inner_kid/features/home_dashboard/providers/home_dashboard_provider.dart';
+import 'package:inner_kid/features/home_dashboard/widgets/child_selector_menu.dart';
 
 class HomeDashboardPage extends ConsumerWidget {
   const HomeDashboardPage({super.key});
@@ -40,23 +41,19 @@ class HomeDashboardPage extends ConsumerWidget {
         ),
       ),
       actions: [
-        IconButton(
-          onPressed: () {
-            // Navigate to profile
+        ChildSelectorMenu(
+          onChildSelected: (selectedChild) {
+            if (selectedChild != null) {
+              // Handle child selection
+              if (selectedChild['name'] == 'Çocuk Ekle') {
+                // Navigate to add child page
+                debugPrint('Navigate to add child');
+              } else {
+                // Child selected
+                debugPrint('Selected child: ${selectedChild['name']}');
+              }
+            }
           },
-          icon: Container(
-            width: 36,
-            height: 36,
-            decoration: const BoxDecoration(
-              color: Color(0xFF667EEA),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.person,
-              color: Colors.white,
-              size: 20,
-            ),
-          ),
         ),
         IconButton(
           onPressed: () {
