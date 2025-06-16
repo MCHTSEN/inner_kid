@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:inner_kid/core/theme/theme.dart';
 import '../viewmodel/first_analysis_viewmodel.dart';
+import 'package:logger/logger.dart';
 
 /// Widget that displays analysis progress with trust-building messages
 class AnalysisLoadingWidget extends ConsumerStatefulWidget {
@@ -22,10 +23,12 @@ class _AnalysisLoadingWidgetState extends ConsumerState<AnalysisLoadingWidget>
 
   int _currentStepIndex = 0;
   late List<AnalysisStep> _analysisSteps;
+  final _logger = Logger();
 
   @override
   void initState() {
     super.initState();
+    _logger.d('AnalysisLoadingWidget: initState called');
     _initializeSteps();
     _initAnimations();
     _startStepCycle();
@@ -33,6 +36,7 @@ class _AnalysisLoadingWidgetState extends ConsumerState<AnalysisLoadingWidget>
   }
 
   void _initializeSteps() {
+    _logger.d('AnalysisLoadingWidget: _initializeSteps called');
     _analysisSteps = [
       AnalysisStep(
         icon: Icons.psychology_outlined,
@@ -65,9 +69,11 @@ class _AnalysisLoadingWidgetState extends ConsumerState<AnalysisLoadingWidget>
         color: Colors.teal,
       ),
     ];
+    _logger.d('AnalysisLoadingWidget: _analysisSteps initialized');
   }
 
   void _initAnimations() {
+    _logger.d('AnalysisLoadingWidget: _initAnimations called');
     _rotationController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
@@ -96,9 +102,11 @@ class _AnalysisLoadingWidgetState extends ConsumerState<AnalysisLoadingWidget>
 
     _rotationController.repeat();
     _textController.forward();
+    _logger.d('AnalysisLoadingWidget: Animations initialized and started');
   }
 
   void _startStepCycle() {
+    _logger.d('AnalysisLoadingWidget: _startStepCycle called');
     Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted) {
         _nextStep();
@@ -107,11 +115,13 @@ class _AnalysisLoadingWidgetState extends ConsumerState<AnalysisLoadingWidget>
   }
 
   void _nextStep() {
+    _logger.d('AnalysisLoadingWidget: _nextStep called, current index: $_currentStepIndex');
     if (_currentStepIndex < _analysisSteps.length - 1) {
       _textController.reverse().then((_) {
         if (mounted) {
           setState(() {
             _currentStepIndex++;
+            _logger.d('AnalysisLoadingWidget: Step incremented to $_currentStepIndex');
           });
           _textController.forward();
 
@@ -124,6 +134,7 @@ class _AnalysisLoadingWidgetState extends ConsumerState<AnalysisLoadingWidget>
         }
       });
     } else {
+      _logger.d('AnalysisLoadingWidget: Analysis completed, navigating back');
       // Analysis completed, wait a moment then auto-navigate back
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
@@ -134,19 +145,23 @@ class _AnalysisLoadingWidgetState extends ConsumerState<AnalysisLoadingWidget>
   }
 
   void _startAnalysisDelayed() {
+    _logger.d('AnalysisLoadingWidget: _startAnalysisDelayed called');
     Future(() {
       _startAnalysis();
     });
   }
 
   void _startAnalysis() {
+    _logger.d('AnalysisLoadingWidget: _startAnalysis called');
     // Start the analysis process using provider
     final viewModel = ref.read(firstAnalysisViewModelProvider.notifier);
     viewModel.submitAnalysis();
+    _logger.d('AnalysisLoadingWidget: Analysis submitted');
   }
 
   @override
   void dispose() {
+    _logger.d('AnalysisLoadingWidget: dispose called');
     _rotationController.dispose();
     _textController.dispose();
     super.dispose();

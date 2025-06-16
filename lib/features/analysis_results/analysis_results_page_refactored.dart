@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:logger/logger.dart';
 
 // Core imports
 import '../../core/theme/theme.dart';
@@ -59,10 +60,12 @@ class _AnalysisResultsPageRefactoredState
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  final _logger = Logger();
 
   @override
   void initState() {
     super.initState();
+    _logger.d('🔵 AnalysisResultsPageRefactored: initState called');
     _initAnimations();
     _initializeViewModel();
     _scheduleAutoPaywall();
@@ -94,14 +97,28 @@ class _AnalysisResultsPageRefactoredState
   }
 
   void _initializeViewModel() {
+    _logger.d('🟡 AnalysisResultsPageRefactored: _initializeViewModel called');
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(analysisResultsViewModelProvider).initialize(
-            analyzedImage: widget.analyzedImage,
-            analysisData: widget.analysisData,
-            isBlurred: widget.isBlurred,
-            userId: widget.userId,
-            variant: widget.variant,
-          );
+      _logger
+          .d('🟢 AnalysisResultsPageRefactored: PostFrameCallback executing');
+      try {
+        final viewModel = ref.read(analysisResultsViewModelProvider);
+        _logger.d(
+            '🟢 AnalysisResultsPageRefactored: ViewModel obtained: $viewModel');
+        viewModel.initialize(
+          analyzedImage: widget.analyzedImage,
+          analysisData: widget.analysisData,
+          isBlurred: widget.isBlurred,
+          userId: widget.userId,
+          variant: widget.variant,
+        );
+        _logger.d(
+            '🟢 AnalysisResultsPageRefactored: ViewModel initialized successfully');
+      } catch (e, stackTrace) {
+        _logger.d(
+            '🔴 AnalysisResultsPageRefactored: Error initializing ViewModel: $e');
+        _logger.d('🔴 StackTrace: $stackTrace');
+      }
     });
   }
 
@@ -126,43 +143,69 @@ class _AnalysisResultsPageRefactoredState
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = ref.watch(analysisResultsViewModelProvider);
-    final state = viewModel.state;
+    _logger.d('🔵 AnalysisResultsPageRefactored: build called');
+    try {
+      final viewModel = ref.watch(analysisResultsViewModelProvider);
+      _logger
+          .d('🟢 AnalysisResultsPageRefactored: ViewModel watched: $viewModel');
+      final state = viewModel.state;
+      _logger.d('🟢 AnalysisResultsPageRefactored: State obtained: $state');
 
-    return Scaffold(
-      appBar: PremiumAppBar(
-        isPremiumUnlocked: state.isPremiumUnlocked,
-        onSharePressed: () => viewModel.shareResults(),
-        onSavePressed: () => viewModel.downloadReport(),
-        onPaywallTrigger: () => _showPaywall('button_click'),
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFF8FAFC),
-              Color(0xFFE2E8F0),
+      return Scaffold(
+        appBar: PremiumAppBar(
+          isPremiumUnlocked: state.isPremiumUnlocked,
+          onSharePressed: () => viewModel.shareResults(),
+          onSavePressed: () => viewModel.downloadReport(),
+          onPaywallTrigger: () => _showPaywall('button_click'),
+        ),
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFFF8FAFC),
+                Color(0xFFE2E8F0),
+              ],
+            ),
+          ),
+          child: SafeArea(
+            child: AnimatedBuilder(
+              animation: _animationController,
+              builder: (context, child) {
+                return FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: _buildContent(context, viewModel),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+    } catch (e, stackTrace) {
+      _logger.d('🔴 AnalysisResultsPageRefactored: Error in build: $e');
+      _logger.d('🔴 StackTrace: $stackTrace');
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              Text('Bir hata oluştu: $e'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Geri Dön'),
+              ),
             ],
           ),
         ),
-        child: SafeArea(
-          child: AnimatedBuilder(
-            animation: _animationController,
-            builder: (context, child) {
-              return FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: _buildContent(context, viewModel),
-                ),
-              );
-            },
-          ),
-        ),
-      ),
-    );
+      );
+    }
   }
 
   Widget _buildContent(
@@ -241,28 +284,35 @@ class _AnalysisResultsPageRefactoredState
 
   /// Show paywall modal with payment options
   void _showPaywall(String trigger) {
-    final viewModel = ref.read(analysisResultsViewModelProvider);
+    _logger.d(
+        '🟡 AnalysisResultsPageRefactored: _showPaywall called with trigger: $trigger');
+    try {
+      final viewModel = ref.read(analysisResultsViewModelProvider);
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => PaywallWidget(
-        onPaymentSuccess: () async {
-          Navigator.pop(context); // Close paywall
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => PaywallWidget(
+          onPaymentSuccess: () async {
+            Navigator.pop(context); // Close paywall
 
-          // Update ViewModel state
-          await viewModel.unlockPremium();
+            // Update ViewModel state
+            await viewModel.unlockPremium();
 
-          // Trigger parent callback if provided
-          widget.onPremiumUnlock?.call();
+            // Trigger parent callback if provided
+            widget.onPremiumUnlock?.call();
 
-          // Show success feedback
-          _showPremiumUnlockFeedback();
-        },
-        onDismiss: () => Navigator.pop(context),
-      ),
-    );
+            // Show success feedback
+            _showPremiumUnlockFeedback();
+          },
+          onDismiss: () => Navigator.pop(context),
+        ),
+      );
+    } catch (e, stackTrace) {
+      _logger.d('🔴 AnalysisResultsPageRefactored: Error in _showPaywall: $e');
+      _logger.d('🔴 StackTrace: $stackTrace');
+    }
   }
 
   /// Show success feedback when premium is unlocked

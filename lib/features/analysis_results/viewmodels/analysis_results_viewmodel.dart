@@ -8,7 +8,12 @@ import 'base_analysis_results_viewmodel.dart';
 /// Riverpod provider for Analysis Results ViewModel
 final analysisResultsViewModelProvider =
     ChangeNotifierProvider.autoDispose<AnalysisResultsViewModel>(
-  (ref) => AnalysisResultsViewModel(),
+  (ref) {
+    print('🔵 Riverpod: Creating AnalysisResultsViewModel instance');
+    final viewModel = AnalysisResultsViewModel();
+    print('🟢 Riverpod: AnalysisResultsViewModel created: $viewModel');
+    return viewModel;
+  },
 );
 
 /// Concrete implementation of Analysis Results ViewModel
@@ -21,8 +26,16 @@ class AnalysisResultsViewModel extends BaseAnalysisResultsViewModel {
     pageLoadTime: DateTime.now(),
   );
 
+  AnalysisResultsViewModel() {
+    print('🔵 AnalysisResultsViewModel: Constructor called');
+  }
+
   @override
-  AnalysisResultsState get state => _state;
+  AnalysisResultsState get state {
+    print(
+        '🟢 AnalysisResultsViewModel: state getter called, returning: $_state');
+    return _state;
+  }
 
   @override
   void initialize({
@@ -32,18 +45,34 @@ class AnalysisResultsViewModel extends BaseAnalysisResultsViewModel {
     String? userId,
     SuccessHeaderVariant? variant,
   }) {
-    _state = AnalysisResultsState.initial(
-      analyzedImage: analyzedImage,
-      analysisData: analysisData,
-      isBlurred: isBlurred,
-      userId: userId,
-      variant: variant,
-    );
+    print('🟡 AnalysisResultsViewModel: initialize called with:');
+    print('  - analyzedImage: $analyzedImage');
+    print('  - analysisData: $analysisData');
+    print('  - isBlurred: $isBlurred');
+    print('  - userId: $userId');
+    print('  - variant: $variant');
 
-    // Track initial page view
-    trackPageView();
+    try {
+      _state = AnalysisResultsState.initial(
+        analyzedImage: analyzedImage,
+        analysisData: analysisData,
+        isBlurred: isBlurred,
+        userId: userId,
+        variant: variant,
+      );
 
-    notifyListeners();
+      print(
+          '🟢 AnalysisResultsViewModel: State initialized successfully: $_state');
+
+      // Track initial page view
+      trackPageView();
+
+      notifyListeners();
+      print('🟢 AnalysisResultsViewModel: notifyListeners called');
+    } catch (e, stackTrace) {
+      print('🔴 AnalysisResultsViewModel: Error in initialize: $e');
+      print('🔴 StackTrace: $stackTrace');
+    }
   }
 
   @override
