@@ -56,8 +56,8 @@ class FloatingBottomNav extends StatelessWidget {
             ),
             _buildNavItem(
               context,
-              icon: Icons.lightbulb_outline,
-              label: 'Öneriler',
+              icon: Icons.home_outlined,
+              label: 'Anasayfa',
               index: 4,
               isActive: currentIndex == 4,
             ),

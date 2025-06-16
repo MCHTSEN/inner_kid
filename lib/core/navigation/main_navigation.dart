@@ -22,7 +22,7 @@ class _MainNavigationState extends State<MainNavigation> {
     const ProfilePage(),
     const HomeDashboardPage(),
     const DrawingTestsPage(),
-    const RecommendationsPage(),
+    const HomeDashboardPage(), // Home page instead of recommendations
   ];
 
   void _handleAnalyzeTap() {
