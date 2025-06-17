@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../auth/viewmodels/auth_viewmodel.dart';
+import '../../auth/models/auth_state.dart';
+import '../../../core/services/firestore_service.dart';
+import '../../../core/models/child_profile.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authViewModelProvider);
+    final authViewModel = ref.read(authViewModelProvider.notifier);
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
@@ -37,21 +44,21 @@ class ProfilePage extends StatelessWidget {
         child: Column(
           children: [
             // User Profile Card
-            _buildUserProfileCard(),
+            _buildUserProfileCard(authState, authViewModel),
 
             const SizedBox(height: 24),
 
             // Children Section
             _buildSectionHeader('Çocuk Profilleri'),
             const SizedBox(height: 12),
-            _buildChildrenSection(),
+            _buildChildrenSection(authState, ref),
 
             const SizedBox(height: 24),
 
             // Settings Section
             _buildSectionHeader('Ayarlar'),
             const SizedBox(height: 12),
-            _buildSettingsSection(),
+            _buildSettingsSection(context, authViewModel),
 
             const SizedBox(height: 120), // Space for bottom nav
           ],
@@ -74,7 +81,10 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildUserProfileCard() {
+  Widget _buildUserProfileCard(
+      AuthState authState, AuthViewModel authViewModel) {
+    final userProfile = authState.userProfile;
+    final isLoading = authState.isLoading;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -112,46 +122,50 @@ class ProfilePage extends StatelessWidget {
 
           // User Info
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Kullanıcı Adı',
-                  style: GoogleFonts.nunito(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF2D3748),
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        userProfile?.name ?? 'Kullanıcı',
+                        style: GoogleFonts.nunito(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF2D3748),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        userProfile?.email ?? 'email@example.com',
+                        style: GoogleFonts.nunito(
+                          fontSize: 14,
+                          color: const Color(0xFF718096),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF667EEA).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          userProfile?.isSubscriptionActive == true
+                              ? '${userProfile?.subscriptionTier.toUpperCase()} Üye'
+                              : 'Ücretsiz Üye',
+                          style: GoogleFonts.nunito(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF667EEA),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'kullanici@email.com',
-                  style: GoogleFonts.nunito(
-                    fontSize: 14,
-                    color: const Color(0xFF718096),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF667EEA).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    'Premium Üye',
-                    style: GoogleFonts.nunito(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF667EEA),
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
 
           // Edit Button
@@ -169,28 +183,62 @@ class ProfilePage extends StatelessWidget {
     ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.2);
   }
 
-  Widget _buildChildrenSection() {
-    return Column(
-      children: [
-        // Add Child Button
-        _buildAddChildCard(),
-        const SizedBox(height: 12),
+  Widget _buildChildrenSection(AuthState authState, WidgetRef ref) {
+    if (authState.userProfile == null) {
+      return const Center(child: Text('Kullanıcı girişi yapılmamış'));
+    }
 
-        // Existing Children
-        _buildChildCard(
-          name: 'Ahmet',
-          age: 8,
-          gender: 'Erkek',
-          analysisCount: 5,
-        ),
-        const SizedBox(height: 12),
-        _buildChildCard(
-          name: 'Ayşe',
-          age: 6,
-          gender: 'Kız',
-          analysisCount: 3,
-        ),
-      ],
+    return FutureBuilder<List<ChildProfile>>(
+      future: ref
+          .read(firestoreServiceProvider)
+          .getChildren(authState.userProfile!.id),
+      builder: (context, snapshot) {
+        return Column(
+          children: [
+            // Add Child Button
+            _buildAddChildCard(),
+            const SizedBox(height: 12),
+
+            // Loading state
+            if (snapshot.connectionState == ConnectionState.waiting)
+              const Center(child: CircularProgressIndicator())
+
+            // Error state
+            else if (snapshot.hasError)
+              Center(
+                child: Text(
+                  'Çocuk profilleri yüklenirken hata oluştu',
+                  style: GoogleFonts.nunito(color: Colors.red),
+                ),
+              )
+
+            // Empty state
+            else if (!snapshot.hasData || snapshot.data!.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  'Henüz çocuk profili eklenmemiş.\nYukarıdaki butona tıklayarak ilk profili oluşturun.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.nunito(
+                    color: const Color(0xFF718096),
+                    fontSize: 14,
+                  ),
+                ),
+              )
+
+            // Children list
+            else
+              ...snapshot.data!.map((child) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _buildChildCardFromProfile(child, ref),
+                  )),
+          ],
+        );
+      },
     );
   }
 
@@ -334,7 +382,25 @@ class ProfilePage extends StatelessWidget {
     ).animate().fadeIn(duration: 400.ms, delay: 200.ms).slideX(begin: -0.2);
   }
 
-  Widget _buildSettingsSection() {
+  Widget _buildChildCardFromProfile(ChildProfile child, WidgetRef ref) {
+    return FutureBuilder<int>(
+      future:
+          ref.read(firestoreServiceProvider).getAnalysisCountForChild(child.id),
+      builder: (context, snapshot) {
+        final analysisCount = snapshot.data ?? 0;
+
+        return _buildChildCard(
+          name: child.name,
+          age: child.ageInYears,
+          gender: child.gender,
+          analysisCount: analysisCount,
+        );
+      },
+    );
+  }
+
+  Widget _buildSettingsSection(
+      BuildContext context, AuthViewModel authViewModel) {
     return Column(
       children: [
         _buildSettingItem(
@@ -362,7 +428,42 @@ class ProfilePage extends StatelessWidget {
           icon: Icons.logout,
           title: 'Çıkış Yap',
           subtitle: 'Hesabınızdan çıkış yapın',
-          onTap: () {},
+          onTap: () async {
+            // Show confirmation dialog
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text(
+                  'Çıkış Yap',
+                  style: GoogleFonts.nunito(fontWeight: FontWeight.bold),
+                ),
+                content: Text(
+                  'Hesabınızdan çıkış yapmak istediğinizden emin misiniz?',
+                  style: GoogleFonts.nunito(),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: Text(
+                      'İptal',
+                      style: GoogleFonts.nunito(color: Colors.grey),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: Text(
+                      'Çıkış Yap',
+                      style: GoogleFonts.nunito(color: Colors.red),
+                    ),
+                  ),
+                ],
+              ),
+            );
+
+            if (confirmed == true) {
+              await authViewModel.signOut();
+            }
+          },
           isDestructive: true,
         ),
       ],

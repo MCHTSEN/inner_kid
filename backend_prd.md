@@ -9,12 +9,6 @@
 - **Navigasyon**: Ekranlar arası geçiş sistemi
 - **Model Yapısı**: Temel data modelleri mevcut
 
-### 🔄 Eksik Backend Entegrasyonları
-- Firebase Authentication henüz entegre edilmemiş
-- Firestore database bağlantısı yok
-- Cloud Storage yapılandırması eksik
-- Gerçek AI analiz servisi yok
-- Payment system entegrasyonu eksik
 
 ---
 
@@ -52,69 +46,65 @@ class DrawingAnalysis {
 }
 ```
 
-### Test Types (Enum)
-- `selfPortrait`: Kendini Çizme
-- `familyDrawing`: Aile Çizimi
-- `houseTreePerson`: Ev-Ağaç-İnsan
-- `narrativeDrawing`: Hikaye Çizimi
-- `emotionalStates`: Duygusal Durumlar
-
----
-
-## 🏗️ Firebase Backend Kurulum Yol Haritası
-
-### Faz 1: Firebase Proje Kurulumu (1 hafta)
-
-#### 1.1 Firebase Console Kurulumu
-```bash
-# Firebase CLI kurulumu
-npm install -g firebase-tools
-firebase login
-```
-
-#### 1.2 Flutter Firebase Entegrasyonu
-```yaml
-# pubspec.yaml - Zaten mevcut
-dependencies:
-  firebase_core: ^3.13.0
-  firebase_auth: ^5.5.1
-  cloud_firestore: ^5.6.9
-  firebase_storage: ^12.4.6
-  firebase_analytics: ^11.5.0
-```
-
-#### 1.3 Platform Konfigürasyonları
-- [ ] Android: `google-services.json` ekleme
-- [ ] iOS: `GoogleService-Info.plist` ekleme
-- [ ] Web: Firebase config ekleme
-- [ ] macOS: Firebase setup
-
 ### Faz 2: Authentication Sistemi (1 hafta)
 
-#### 2.1 Auth Service Oluşturma
+#### 2.1 Auth Service Oluşturma ✅ TAMAMLANDI
 ```dart
-// lib/core/services/auth_service.dart
+// lib/core/services/auth_service.dart ✅ OLUŞTURULDU
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
   
+  // ✅ UYGULANDI: Tüm authentication methodları
   Future<User?> signInWithEmailAndPassword(String email, String password);
-  Future<User?> createUserWithEmailAndPassword(String email, String password);
-  Future<User?> signInWithGoogle();
-  Future<User?> signInWithApple();
+  Future<User?> createUserWithEmailAndPassword(String email, String password, String name);
+  Future<User?> signInWithGoogle(); // ✅ Google Sign-In eklendi
   Future<void> signOut();
+  Future<void> sendPasswordResetEmail(String email); // ✅ Password reset eklendi
+  Future<void> updateUserProfile({String? displayName, String? photoURL}); // ✅ Profile update eklendi
+  Future<void> deleteAccount(); // ✅ Account deletion eklendi
   Stream<User?> get authStateChanges;
+  
+  // ✅ Türkçe error handling eklendi
+  Exception _handleAuthException(FirebaseAuthException e);
 }
 ```
 
-#### 2.2 Auth ViewModels
+#### 2.2 Auth ViewModels ✅ TAMAMLANDI
 ```dart
-// lib/features/auth/viewmodels/auth_viewmodel.dart
-class AuthViewModel extends StateNotifier<AuthState> {
-  Future<void> signIn(String email, String password);
-  Future<void> signUp(String email, String password, String name);
-  Future<void> signInWithGoogle();
-  Future<void> signOut();
+// lib/features/auth/models/auth_state.dart ✅ OLUŞTURULDU
+enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
+
+class AuthState {
+  final AuthStatus status;
+  final User? firebaseUser;
+  final UserProfile? userProfile; // ✅ UserProfile entegrasyonu
+  final String? errorMessage;
+  final bool isLoading;
+  // ✅ Factory constructors ve helper methodlar eklendi
 }
+
+// lib/features/auth/viewmodels/auth_viewmodel.dart ✅ OLUŞTURULDU
+class AuthViewModel extends StateNotifier<AuthState> {
+  // ✅ UYGULANDI: Riverpod StateNotifier pattern
+  Future<void> signInWithEmailAndPassword(String email, String password);
+  Future<void> signUpWithEmailAndPassword(String email, String password, String name);
+  Future<void> signInWithGoogle(); // ✅ Google Sign-In eklendi
+  Future<void> signOut();
+  Future<void> sendPasswordResetEmail(String email); // ✅ Password reset eklendi
+  Future<void> updateUserProfile({String? name, String? photoUrl}); // ✅ Profile update eklendi
+  Future<void> deleteAccount(); // ✅ Account deletion eklendi
+  
+  // ✅ Otomatik auth state listener eklendi
+  void _initAuthListener();
+  // ✅ Otomatik user profile loading eklendi
+  Future<void> _loadUserProfile(User firebaseUser);
+}
+
+// ✅ Riverpod Providers eklendi
+final authServiceProvider = Provider<AuthService>((ref) => AuthService());
+final firestoreServiceProvider = Provider<FirestoreService>((ref) => FirestoreService());
+final authViewModelProvider = StateNotifierProvider<AuthViewModel, AuthState>((ref) => ...);
 ```
 
 #### 2.3 Auth UI Pages
@@ -126,12 +116,11 @@ class AuthViewModel extends StateNotifier<AuthState> {
 ### Faz 3: Firestore Database Yapısı (1 hafta)
 
 #### 3.1 Collection Yapısı
-```javascript
 // Firestore collections
 users/{userId} {
   email: string,
   name: string,
-  subscriptionTier: 'free' | 'pro' | 'family',
+  subscription: bool,
   subscriptionExpiry: timestamp,
   createdAt: timestamp,
   updatedAt: timestamp
@@ -156,7 +145,6 @@ drawings/{drawingId} {
   childId: string,
   userId: string,
   imageUrl: string,
-  thumbnailUrl: string,
   uploadDate: timestamp,
   testType: string,
   analysisStatus: 'pending' | 'processing' | 'completed' | 'failed',
@@ -204,29 +192,53 @@ subscriptions/{userId} {
 }
 ```
 
-#### 3.2 Firestore Services
+#### 3.2 Firestore Services ✅ TAMAMLANDI
 ```dart
-// lib/core/services/firestore_service.dart
+// lib/core/services/firestore_service.dart ✅ OLUŞTURULDU
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   
-  // User operations
-  Future<void> createUser(String userId, Map<String, dynamic> userData);
-  Future<DocumentSnapshot> getUser(String userId);
+  // ✅ Collection constants tanımlandı
+  static const String usersCollection = 'users';
+  static const String childrenCollection = 'children';
+  static const String drawingsCollection = 'drawings';
+  static const String analysesCollection = 'analyses';
+  static const String subscriptionsCollection = 'subscriptions';
   
-  // Child operations
+  // ✅ User operations - UYGULANDI
+  Future<void> createUser(String userId, UserProfile userProfile); // ✅ UserProfile entegrasyonu
+  Future<UserProfile?> getUser(String userId); // ✅ UserProfile return type
+  Future<void> updateUser(String userId, Map<String, dynamic> updates);
+  Future<void> deleteUser(String userId); // ✅ Account deletion support
+  Stream<UserProfile?> getUserStream(String userId); // ✅ Real-time updates
+  
+  // ✅ Child operations - UYGULANDI
   Future<String> createChild(ChildProfile child);
   Future<List<ChildProfile>> getChildren(String userId);
+  Future<ChildProfile?> getChild(String childId); // ✅ Single child fetch
   Future<void> updateChild(String childId, Map<String, dynamic> updates);
+  Future<void> deleteChild(String childId); // ✅ Child deletion
+  Stream<List<ChildProfile>> getChildrenStream(String userId); // ✅ Real-time updates
+  Future<int> getAnalysisCountForChild(String childId); // ✅ Analysis count helper
   
-  // Drawing operations
-  Future<String> createDrawing(DrawingAnalysis drawing);
-  Future<DrawingAnalysis> getDrawing(String drawingId);
-  Future<List<DrawingAnalysis>> getChildDrawings(String childId);
+  // ✅ Drawing operations - HAZIR (Analysis entegrasyonu için)
+  // Future<String> createDrawing(DrawingAnalysis drawing);
+  // Future<DrawingAnalysis> getDrawing(String drawingId);
+  // Future<List<DrawingAnalysis>> getChildDrawings(String childId);
   
-  // Analysis operations
-  Future<void> updateAnalysisResults(String analysisId, Map<String, dynamic> results);
+  // ✅ Analysis operations - HAZIR (AI entegrasyonu için)
+  // Future<void> updateAnalysisResults(String analysisId, Map<String, dynamic> results);
+  
+  // ✅ Subscription operations - EKLENDI
+  Future<void> updateSubscription(String userId, Map<String, dynamic> subscriptionData);
+  
+  // ✅ Batch operations - EKLENDI
+  Future<void> batchWrite(List<Map<String, dynamic>> operations);
 }
+
+// ✅ Model Updates - TAMAMLANDI
+// lib/core/models/user_profile.dart ✅ YENİ OLUŞTURULDU
+// lib/core/models/child_profile.dart ✅ GÜNCELLENDI (userId field, fromMap/toMap methods)
 ```
 
 ### Faz 4: Cloud Storage Setup (1 hafta)
@@ -236,13 +248,12 @@ class FirestoreService {
 drawings/
   {userId}/
     {childId}/
-      originals/
         {drawingId}.jpg
-      thumbnails/
-        {drawingId}_thumb.jpg
+  
 
 reports/
   {userId}/
+   {childId}/
     {analysisId}.pdf
 
 profiles/
@@ -258,9 +269,6 @@ class StorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
   
   Future<String> uploadDrawing(File imageFile, String userId, String childId, String drawingId);
-  Future<String> uploadThumbnail(File thumbnailFile, String userId, String childId, String drawingId); 
-  Future<String> uploadAvatar(File avatarFile, String userId, String childId);
-  Future<String> uploadReport(Uint8List pdfBytes, String userId, String analysisId);
   Future<void> deleteDrawing(String userId, String childId, String drawingId);
 }
 ```
@@ -275,31 +283,21 @@ class AIAnalysisService {
   
   Future<Map<String, dynamic>> analyzeDrawing({
     required File imageFile,
-    required DrawingTestType testType,
     required Map<String, String> questionnaire,
     required int childAge,
-  });
-  
-  Future<List<String>> generateRecommendations(Map<String, dynamic> analysisResults);
-  Future<String> generateDetailedReport(String analysisId);
-}
-```
+    String? note,
 
-#### 5.2 Analysis Processing
-```dart
-// lib/core/services/analysis_processing_service.dart
-class AnalysisProcessingService {
-  Future<void> processDrawingAnalysis(String drawingId) async {
-    // 1. Get drawing from Firestore
-    // 2. Download image from Storage  
-    // 3. Call AI analysis service
+    // 1. Get drawing from ImagePicker
+    // 2. Send image to Gemini API with questionnaire and excellent prompt
+    // 3. Get Response from Gemini API
     // 4. Process and format results
-    // 5. Update Firestore with results
+    // 5. Update Firestore with results and save image to storage 
     // 6. Generate PDF report
     // 7. Send notification to user
-  }
+    // use firebase_ai package for this
+    // use context7 for prompt
+  });
 }
-```
 
 ---
 
@@ -307,12 +305,14 @@ class AnalysisProcessingService {
 
 ### Hafta 1: Firebase Setup & Auth
 ```dart
-// TODO: Implement
+// COMPLETED: ✅
 - [x] Firebase project kurulumu
-- [ ] Authentication service
-- [ ] Auth UI components
-- [ ] Auth state management
-- [ ] Platform-specific configurations
+- [x] Authentication service (AuthService ✅)
+- [x] Auth state management (AuthState, AuthViewModel ✅)
+- [x] User profile model (UserProfile ✅)
+- [x] Firestore service (FirestoreService ✅)
+- [x] Profile page authentication integration ✅
+- [ ] Auth UI components (Login/Register pages)
 ```
 
 ### Hafta 2: Database & Storage

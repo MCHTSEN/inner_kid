@@ -4,6 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:inner_kid/core/navigation/main_navigation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'features/splash/splash_page.dart';
+import 'features/auth/views/login_page.dart';
+import 'features/landing/landing_page.dart';
 
 // ...
 
@@ -49,7 +52,13 @@ class InnerKidApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const MainNavigation(),
+      home: const SplashPage(),
+      routes: {
+        '/splash': (context) => const SplashPage(),
+        '/landing': (context) => const LandingPage(),
+        '/login': (context) => const LoginPage(),
+        '/main': (context) => const MainNavigation(),
+      },
     );
   }
 }
