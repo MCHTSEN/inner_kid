@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:inner_kid/widgets/pick_photo_and_send.dart';
 
 class QuickAnalysisSection extends StatelessWidget {
   const QuickAnalysisSection({super.key});
@@ -30,7 +31,7 @@ class QuickAnalysisSection extends StatelessWidget {
             subtitle: 'Var olan çizim',
             color: const Color(0xFF38B2AC),
             onTap: () {
-              // Navigate to gallery
+              ImageService.pickPhotoAndSend(context: context);
             },
           ),
         ),

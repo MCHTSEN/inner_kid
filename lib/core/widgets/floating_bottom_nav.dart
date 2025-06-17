@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:inner_kid/widgets/pick_photo_and_send.dart';
 
 class FloatingBottomNav extends StatelessWidget {
   final int currentIndex;
@@ -119,7 +120,7 @@ class FloatingBottomNav extends StatelessWidget {
       height: 80,
       margin: const EdgeInsets.symmetric(horizontal: 8),
       child: GestureDetector(
-        onTap: () => onTap(2),
+        onTap: () => ImageService.pickPhotoAndSend(context: context),
         child: Container(
           decoration: BoxDecoration(
             gradient: const LinearGradient(
