@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'analysis_question.dart';
 
 /// State model for the first analysis feature
@@ -12,6 +13,7 @@ class FirstAnalysisState {
   final bool isAnalyzing; // New: Analysis in progress
   final bool isAnalysisCompleted; // New: Analysis finished
   final bool isPremiumUnlocked; // New: Premium content unlocked
+  final Map<String, dynamic>? analysisResults; // New: Analysis results
 
   const FirstAnalysisState({
     this.uploadedImage,
@@ -23,6 +25,7 @@ class FirstAnalysisState {
     this.isAnalyzing = false,
     this.isAnalysisCompleted = false,
     this.isPremiumUnlocked = false,
+    this.analysisResults,
   });
 
   FirstAnalysisState copyWith({
@@ -35,6 +38,7 @@ class FirstAnalysisState {
     bool? isAnalyzing,
     bool? isAnalysisCompleted,
     bool? isPremiumUnlocked,
+    Map<String, dynamic>? analysisResults,
   }) {
     return FirstAnalysisState(
       uploadedImage: uploadedImage ?? this.uploadedImage,
@@ -46,6 +50,7 @@ class FirstAnalysisState {
       isAnalyzing: isAnalyzing ?? this.isAnalyzing,
       isAnalysisCompleted: isAnalysisCompleted ?? this.isAnalysisCompleted,
       isPremiumUnlocked: isPremiumUnlocked ?? this.isPremiumUnlocked,
+      analysisResults: analysisResults ?? this.analysisResults,
     );
   }
 

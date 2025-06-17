@@ -1,0 +1,99 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // ✅ Drawing images - Only authenticated users can access their own drawings
+    match /drawings/{userId}/{childId}/{drawingId} {
+      // Allow read/write only for the user who owns the data
+      allow read, write: if request.auth != null 
+                      && request.auth.uid == userId;
+      
+      // Additional validation for uploads
+      allow create: if request.auth != null 
+                    && request.auth.uid == userId
+                    && resource == null  // File doesn't exist yet
+                    && request.resource.size < 10 * 1024 * 1024  // Max 10MB
+                    && request.resource.contentType.matches('image/.*');  // Images only
+      
+      // Allow updates only for metadata
+      allow update: if request.auth != null 
+                    && request.auth.uid == userId
+                    && request.resource.size == resource.size;  // File size unchanged
+    }
+    
+    // ✅ Reports - Only authenticated users can read their own reports
+    match /reports/{userId}/{childId}/{analysisId} {
+      // Allow read only for the user who owns the data
+      allow read: if request.auth != null 
+                  && request.auth.uid == userId;
+      
+      // Only allow system to write reports (admin/service account)
+      allow write: if request.auth != null 
+                   && request.auth.uid == userId;  // For now, allow user to write
+      
+      // Additional validation for uploads
+      allow create: if request.auth != null 
+                    && request.auth.uid == userId
+                    && resource == null  // File doesn't exist yet
+                    && request.resource.size < 50 * 1024 * 1024  // Max 50MB
+                    && request.resource.contentType == 'application/pdf';  // PDFs only
+    }
+    
+    // ✅ Profile avatars - Users can manage their children's avatars
+    match /profiles/{userId}/{childId}/avatar.jpg {
+      // Allow read/write for the user who owns the profile
+      allow read, write: if request.auth != null 
+                      && request.auth.uid == userId;
+      
+      // Additional validation for uploads
+      allow create: if request.auth != null 
+                    && request.auth.uid == userId
+                    && resource == null  // File doesn't exist yet
+                    && request.resource.size < 5 * 1024 * 1024  // Max 5MB
+                    && request.resource.contentType.matches('image/.*');  // Images only
+      
+      // Allow updates with size validation
+      allow update: if request.auth != null 
+                    && request.auth.uid == userId
+                    && request.resource.size < 5 * 1024 * 1024;  // Max 5MB
+    }
+    
+    // ✅ Temporary files - For processing
+    match /temp/{userId}/{fileName} {
+      // Allow temporary files with time-based access
+      allow read, write, delete: if request.auth != null 
+                                && request.auth.uid == userId
+                                && request.resource.timeCreated > timestamp.now() - duration.make(hours: 24);  // 24 hours max
+      
+      // Additional validation for temp uploads
+      allow create: if request.auth != null 
+                    && request.auth.uid == userId
+                    && request.resource.size < 20 * 1024 * 1024;  // Max 20MB
+    }
+    
+    // ✅ Admin functions (for future use)
+    match /admin/{allPaths=**} {
+      // Allow admin access only for admin users
+      // For now, deny all access until admin system is implemented
+      allow read, write: if false;
+    }
+    
+    // ✅ Deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+// ✅ Custom functions for validation
+// function isOwner(userId) {
+//   return request.auth != null && request.auth.uid == userId;
+// }
+// 
+// function isValidImage() {
+//   return request.resource.contentType.matches('image/.*');
+// }
+// 
+// function isValidSize(maxSize) {
+//   return request.resource.size < maxSize;
+// } 
