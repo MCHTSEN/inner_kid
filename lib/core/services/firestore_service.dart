@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logger/logger.dart';
 
 import '../models/child_profile.dart';
+import '../models/drawing_analysis.dart';
 import '../models/user_profile.dart';
 
 class FirestoreService {
@@ -186,6 +187,154 @@ class FirestoreService {
           .map((doc) => ChildProfile.fromMap(doc.data(), doc.id))
           .toList();
     });
+  }
+
+  // Analysis operations
+  Future<List<DrawingAnalysis>> getUserAnalyses(String userId) async {
+    try {
+      _logger.i('Fetching analyses for user: $userId');
+
+      // Use server-side query with orderBy (requires composite index)
+      final querySnapshot = await _db
+          .collection(analysesCollection)
+          .where('userId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .limit(20)
+          .get();
+
+      _logger
+          .i('Found ${querySnapshot.docs.length} documents for user: $userId');
+
+      final analyses = <DrawingAnalysis>[];
+
+      for (final doc in querySnapshot.docs) {
+        try {
+          final data = doc.data();
+          _logger.i(
+              'Processing document ${doc.id} with data keys: ${data.keys.toList()}');
+
+          // Check if required fields exist
+          if (!data.containsKey('userId') ||
+              !data.containsKey('imageUrl') ||
+              !data.containsKey('createdAt')) {
+            _logger.w('Document ${doc.id} missing required fields, skipping');
+            continue;
+          }
+
+          // Prepare data with defaults for missing fields
+          final analysisData = {
+            'id': doc.id,
+            'userId': data['userId'],
+            'childId': data['childId'] ?? 'default_child',
+            'imageUrl': data['imageUrl'],
+            'uploadDate': data['uploadDate'] ??
+                data['createdAt'], // Use createdAt as fallback
+            'testType':
+                data['testType'] ?? 'family_drawing', // Default test type
+            'status': data['status'] ?? 'completed',
+            'aiResults': data['insights'] ??
+                data['aiResults'], // Support both field names
+            'expertComments': data['expertComments'],
+            'recommendations': data['recommendations'] ?? <String>[],
+            'metadata': data['metadata'],
+            'createdAt': data['createdAt'],
+            'completedAt': data['completedAt'],
+          };
+
+          final analysis = DrawingAnalysis.fromJson(analysisData);
+
+          analyses.add(analysis);
+          _logger.i('Successfully parsed document ${doc.id}');
+        } catch (e) {
+          _logger.e('Error parsing document ${doc.id}: $e');
+          // Continue with other documents
+        }
+      }
+
+      _logger.i(
+          'Successfully fetched ${analyses.length} analyses for user: $userId');
+      return analyses;
+    } catch (e) {
+      _logger.e('Error fetching user analyses: $e');
+
+      // If composite index error, fall back to client-side sorting
+      if (e.toString().contains('index') ||
+          e.toString().contains('requires an index')) {
+        _logger.w(
+            'Composite index not found, falling back to client-side sorting');
+        return _getUserAnalysesWithClientSorting(userId);
+      }
+
+      // Return empty list for other errors to allow fallback to mock data
+      return [];
+    }
+  }
+
+  // Fallback method with client-side sorting (current implementation)
+  Future<List<DrawingAnalysis>> _getUserAnalysesWithClientSorting(
+      String userId) async {
+    try {
+      _logger.i('Using client-side sorting for user: $userId');
+
+      // Get analyses for the user (without orderBy to avoid composite index requirement)
+      final querySnapshot = await _db
+          .collection(analysesCollection)
+          .where('userId', isEqualTo: userId)
+          .get();
+
+      _logger
+          .i('Found ${querySnapshot.docs.length} documents for user: $userId');
+
+      final analyses = <DrawingAnalysis>[];
+
+      for (final doc in querySnapshot.docs) {
+        try {
+          final data = doc.data();
+
+          // Check if required fields exist
+          if (!data.containsKey('userId') ||
+              !data.containsKey('imageUrl') ||
+              !data.containsKey('createdAt')) {
+            _logger.w('Document ${doc.id} missing required fields, skipping');
+            continue;
+          }
+
+          // Prepare data with defaults for missing fields
+          final analysisData = {
+            'id': doc.id,
+            'userId': data['userId'],
+            'childId': data['childId'] ?? 'default_child',
+            'imageUrl': data['imageUrl'],
+            'uploadDate': data['uploadDate'] ?? data['createdAt'],
+            'testType': data['testType'] ?? 'family_drawing',
+            'status': data['status'] ?? 'completed',
+            'aiResults': data['insights'] ?? data['aiResults'],
+            'expertComments': data['expertComments'],
+            'recommendations': data['recommendations'] ?? <String>[],
+            'metadata': data['metadata'],
+            'createdAt': data['createdAt'],
+            'completedAt': data['completedAt'],
+          };
+
+          final analysis = DrawingAnalysis.fromJson(analysisData);
+          analyses.add(analysis);
+        } catch (e) {
+          _logger.e('Error parsing document ${doc.id}: $e');
+          // Continue with other documents
+        }
+      }
+
+      // Sort client-side by createdAt descending and limit to 20
+      analyses.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      final limitedAnalyses = analyses.take(20).toList();
+
+      _logger.i(
+          'Successfully fetched ${limitedAnalyses.length} analyses with client-side sorting');
+      return limitedAnalyses;
+    } catch (e) {
+      _logger.e('Error in client-side sorting fallback: $e');
+      return [];
+    }
   }
 
   // Analysis count for child

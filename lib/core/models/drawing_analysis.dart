@@ -58,17 +58,20 @@ class DrawingAnalysis {
 
   int get emotionalScore {
     if (aiResults == null) return 0;
-    return (aiResults!['emotionalScore'] ?? 0) as int;
+    final score = aiResults!['emotionalScore'] ?? 0;
+    return score is int ? score : (score as double).round();
   }
 
   int get creativityScore {
     if (aiResults == null) return 0;
-    return (aiResults!['creativityScore'] ?? 0) as int;
+    final score = aiResults!['creativityScore'] ?? 0;
+    return score is int ? score : (score as double).round();
   }
 
   int get developmentScore {
     if (aiResults == null) return 0;
-    return (aiResults!['developmentScore'] ?? 0) as int;
+    final score = aiResults!['developmentScore'] ?? 0;
+    return score is int ? score : (score as double).round();
   }
 
   List<String> get keyFindings {

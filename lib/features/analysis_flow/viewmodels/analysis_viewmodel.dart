@@ -84,8 +84,11 @@ class AnalysisViewModel extends StateNotifier<AnalysisState> {
         'userId': userId,
         'childId': finalChildId,
         'imageUrl': imageUrl,
+        'uploadDate': DateTime.now().toIso8601String(),
+        'testType': 'family_drawing',
         'status': 'analyzing',
         'questionnaire': questionnaire ?? {},
+        'recommendations': <String>[],
         'createdAt': DateTime.now().toIso8601String(),
       };
 
