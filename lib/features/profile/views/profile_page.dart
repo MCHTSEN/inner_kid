@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../auth/viewmodels/auth_viewmodel.dart';
-import '../../auth/models/auth_state.dart';
-import '../../../core/services/firestore_service.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../../../core/di/providers.dart';
 import '../../../core/models/child_profile.dart';
+import '../../auth/models/auth_state.dart';
+import '../../auth/viewmodels/auth_viewmodel.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});

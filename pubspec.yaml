@@ -39,6 +39,7 @@ dependencies:
   firebase_storage: ^12.4.6
   firebase_analytics: ^11.5.0
   google_sign_in: ^6.1.6
+  firebase_ai: ^2.0.0
 
   # AI Integration
   google_generative_ai: ^0.4.4

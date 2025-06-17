@@ -194,10 +194,18 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage>
                     child: TabBarView(
                       controller: _tabController,
                       children: [
-                        InsightsDisplayWidget(insights: results.insights),
-                        _buildDetailedAnalysis(results.insights),
-                        RecommendationsWidget(
-                            recommendations: results.insights.recommendations),
+                        SingleChildScrollView(
+                          child:
+                              InsightsDisplayWidget(insights: results.insights),
+                        ),
+                        SingleChildScrollView(
+                          child: _buildDetailedAnalysis(results.insights),
+                        ),
+                        SingleChildScrollView(
+                          child: RecommendationsWidget(
+                              recommendations:
+                                  results.insights.recommendations),
+                        ),
                       ],
                     ),
                   ),

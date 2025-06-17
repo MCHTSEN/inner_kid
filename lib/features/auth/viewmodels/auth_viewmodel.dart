@@ -1,8 +1,10 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:inner_kid/core/services/storage_service.dart';
 import 'package:logger/logger.dart';
 
+import '../../../core/di/providers.dart';
 import '../../../core/models/user_profile.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/services/firestore_service.dart';
@@ -229,15 +231,6 @@ class AuthViewModel extends StateNotifier<AuthState> {
     }
   }
 }
-
-// Providers
-final authServiceProvider = Provider<AuthService>((ref) => AuthService());
-
-final firestoreServiceProvider =
-    Provider<FirestoreService>((ref) => FirestoreService());
-
-final storageServiceProvider =
-    Provider<StorageService>((ref) => StorageService());
 
 final authViewModelProvider =
     StateNotifierProvider<AuthViewModel, AuthState>((ref) {

@@ -18,7 +18,7 @@ DashboardData _getMockDashboardData() {
     DrawingAnalysis(
       id: '1',
       childId: '1',
-      imageUrl: 'https://via.placeholder.com/300x200/667EEA/FFFFFF?text=Çizim1',
+      imageUrl: 'mock_image_1',
       uploadDate: now.subtract(const Duration(days: 2)),
       testType: DrawingTestType.familyDrawing,
       status: AnalysisStatus.completed,
@@ -43,7 +43,7 @@ DashboardData _getMockDashboardData() {
     DrawingAnalysis(
       id: '2',
       childId: '2',
-      imageUrl: 'https://via.placeholder.com/300x200/38B2AC/FFFFFF?text=Çizim2',
+      imageUrl: 'mock_image_2',
       uploadDate: now.subtract(const Duration(days: 5)),
       testType: DrawingTestType.selfPortrait,
       status: AnalysisStatus.completed,
@@ -63,7 +63,7 @@ DashboardData _getMockDashboardData() {
     DrawingAnalysis(
       id: '3',
       childId: '1',
-      imageUrl: 'https://via.placeholder.com/300x200/ED8936/FFFFFF?text=Çizim3',
+      imageUrl: 'mock_image_3',
       uploadDate: now.subtract(const Duration(days: 7)),
       testType: DrawingTestType.houseTreePerson,
       status: AnalysisStatus.processing,

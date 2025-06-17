@@ -107,42 +107,55 @@ class _AnalysisWaitingPageState extends ConsumerState<AnalysisWaitingPage>
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              const SizedBox(height: 60),
-
-              // Main illustration
-              _buildMainIllustration(analysisState),
-
-              const SizedBox(height: 60),
-
-              // Status text
-              _buildStatusText(analysisState),
-
-              const SizedBox(height: 40),
-
-              // Progress indicator
-              AnalysisProgressIndicator(
-                progress: analysisState.overallProgress,
-                message: analysisState.currentStepMessage,
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top -
+                    MediaQuery.of(context).padding.bottom -
+                    kToolbarHeight -
+                    48, // Account for padding and app bar
               ),
+              child: IntrinsicHeight(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 60),
 
-              const SizedBox(height: 40),
+                    // Main illustration
+                    _buildMainIllustration(analysisState),
 
-              // Analysis status widget
-              AnalysisStatusWidget(status: analysisState.status),
+                    const SizedBox(height: 60),
 
-              const Spacer(),
+                    // Status text
+                    _buildStatusText(analysisState),
 
-              // Cancel button (if applicable)
-              if (analysisState.canCancel) _buildCancelButton(),
+                    const SizedBox(height: 40),
 
-              // Error message (if any)
-              if (analysisState.hasError)
-                _buildErrorMessage(analysisState.errorMessage!),
+                    // Progress indicator
+                    AnalysisProgressIndicator(
+                      progress: analysisState.overallProgress,
+                      message: analysisState.currentStepMessage,
+                    ),
 
-              const SizedBox(height: 20),
-            ],
+                    const SizedBox(height: 40),
+
+                    // Analysis status widget
+                    AnalysisStatusWidget(status: analysisState.status),
+
+                    const Spacer(),
+
+                    // Cancel button (if applicable)
+                    if (analysisState.canCancel) _buildCancelButton(),
+
+                    // Error message (if any)
+                    if (analysisState.hasError)
+                      _buildErrorMessage(analysisState.errorMessage!),
+
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),

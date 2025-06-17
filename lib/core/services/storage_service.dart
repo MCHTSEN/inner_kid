@@ -5,10 +5,13 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image/image.dart' as img;
 import 'package:logger/logger.dart';
 import 'package:path/path.dart' as path;
+import 'package:uuid/uuid.dart';
 
+/// Service for handling file uploads to Firebase Storage
 class StorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final Logger _logger = Logger();
+  final Uuid _uuid = const Uuid();
 
   // Storage paths
   static const String drawingsPath = 'drawings';
@@ -18,35 +21,27 @@ class StorageService {
 
   // ✅ Drawing operations
 
-  /// Upload drawing image to Firebase Storage
-  /// Returns the download URL of the uploaded image
+  /// Upload a child's drawing to Firebase Storage
   Future<String> uploadDrawing({
     required File imageFile,
     required String userId,
     required String childId,
     required String drawingId,
-    bool compressImage = true,
-    int quality = 85,
   }) async {
     try {
-      _logger.i('Uploading drawing: $drawingId for child: $childId');
+      _logger.i('Uploading drawing: $drawingId');
 
-      // Compress image if needed
-      File finalImageFile = imageFile;
-      if (compressImage) {
-        finalImageFile = await _compressImage(imageFile, quality);
-      }
-
-      // Create storage path
-      final String fileName = '$drawingId.jpg';
-      final String storagePath = '$drawingsPath/$userId/$childId/$fileName';
+      // Create path for the drawing
+      final fileName =
+          '${drawingId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final path = 'drawings/$userId/$childId/$fileName';
 
       // Create reference
-      final Reference storageRef = _storage.ref().child(storagePath);
+      final ref = _storage.ref().child(path);
 
-      // Upload file with metadata
-      final UploadTask uploadTask = storageRef.putFile(
-        finalImageFile,
+      // Upload the file
+      final uploadTask = await ref.putFile(
+        imageFile,
         SettableMetadata(
           contentType: 'image/jpeg',
           customMetadata: {
@@ -58,15 +53,14 @@ class StorageService {
         ),
       );
 
-      // Wait for upload completion
-      final TaskSnapshot snapshot = await uploadTask;
-      final String downloadUrl = await snapshot.ref.getDownloadURL();
+      // Get download URL
+      final downloadUrl = await uploadTask.ref.getDownloadURL();
 
       _logger.i('Drawing uploaded successfully: $downloadUrl');
       return downloadUrl;
     } catch (e) {
-      _logger.e('Error uploading drawing: $e');
-      throw Exception('Failed to upload drawing: ${e.toString()}');
+      _logger.e('Failed to upload drawing: $e');
+      throw Exception('Failed to upload drawing: $e');
     }
   }
 
@@ -432,4 +426,134 @@ class StorageService {
       return snapshot.bytesTransferred / snapshot.totalBytes;
     });
   }
+
+  /// Upload profile image
+  Future<String> uploadProfileImage({
+    required File imageFile,
+    required String userId,
+    required String imageId,
+  }) async {
+    try {
+      _logger.i('Uploading profile image: $imageId');
+
+      final fileName =
+          '${imageId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final path = 'profile_images/$userId/$fileName';
+
+      final ref = _storage.ref().child(path);
+
+      final uploadTask = await ref.putFile(
+        imageFile,
+        SettableMetadata(
+          contentType: 'image/jpeg',
+          customMetadata: {
+            'userId': userId,
+            'imageId': imageId,
+            'uploadedAt': DateTime.now().toIso8601String(),
+          },
+        ),
+      );
+
+      final downloadUrl = await uploadTask.ref.getDownloadURL();
+
+      _logger.i('Profile image uploaded successfully: $downloadUrl');
+      return downloadUrl;
+    } catch (e) {
+      _logger.e('Failed to upload profile image: $e');
+      throw Exception('Failed to upload profile image: $e');
+    }
+  }
+
+  /// Upload data as bytes
+  Future<String> uploadBytes({
+    required Uint8List data,
+    required String path,
+    required String contentType,
+    Map<String, String>? metadata,
+  }) async {
+    try {
+      _logger.i('Uploading bytes to: $path');
+
+      final ref = _storage.ref().child(path);
+
+      final uploadTask = await ref.putData(
+        data,
+        SettableMetadata(
+          contentType: contentType,
+          customMetadata: metadata ?? {},
+        ),
+      );
+
+      final downloadUrl = await uploadTask.ref.getDownloadURL();
+
+      _logger.i('Bytes uploaded successfully: $downloadUrl');
+      return downloadUrl;
+    } catch (e) {
+      _logger.e('Failed to upload bytes: $e');
+      throw Exception('Failed to upload bytes: $e');
+    }
+  }
+
+  /// Delete a file from storage
+  Future<void> deleteFile(String downloadUrl) async {
+    try {
+      _logger.i('Deleting file: $downloadUrl');
+
+      final ref = _storage.refFromURL(downloadUrl);
+      await ref.delete();
+
+      _logger.i('File deleted successfully');
+    } catch (e) {
+      _logger.e('Failed to delete file: $e');
+      throw Exception('Failed to delete file: $e');
+    }
+  }
+
+  /// Get file metadata
+  Future<FullMetadata> getFileMetadata(String downloadUrl) async {
+    try {
+      final ref = _storage.refFromURL(downloadUrl);
+      return await ref.getMetadata();
+    } catch (e) {
+      _logger.e('Failed to get file metadata: $e');
+      throw Exception('Failed to get file metadata: $e');
+    }
+  }
+
+  /// List files in a directory
+  Future<List<String>> listFiles(String path, {int maxResults = 100}) async {
+    try {
+      _logger.i('Listing files in: $path');
+
+      final ref = _storage.ref().child(path);
+      final result = await ref.listAll();
+
+      final downloadUrls = <String>[];
+      for (final item in result.items) {
+        final url = await item.getDownloadURL();
+        downloadUrls.add(url);
+      }
+
+      _logger.i('Found ${downloadUrls.length} files');
+      return downloadUrls;
+    } catch (e) {
+      _logger.e('Failed to list files: $e');
+      throw Exception('Failed to list files: $e');
+    }
+  }
+
+  /// Monitor upload progress
+  Stream<TaskSnapshot> uploadWithProgress({
+    required File file,
+    required String path,
+    SettableMetadata? metadata,
+  }) {
+    final ref = _storage.ref().child(path);
+    final uploadTask = ref.putFile(file, metadata);
+
+    return uploadTask.snapshotEvents;
+  }
+
+  /// Generate unique file ID
+  String generateFileId() => _uuid.v4();
 }

@@ -26,19 +26,25 @@ class AnalysisProgressIndicator extends StatelessWidget {
             color: Colors.grey.shade200,
             borderRadius: BorderRadius.circular(4),
           ),
-          child: Stack(
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 500),
-                curve: Curves.easeInOut,
-                width: MediaQuery.of(context).size.width * progress - 48,
-                height: 8,
-                decoration: BoxDecoration(
-                  gradient: AppTheme.primaryGradient,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-            ],
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final progressWidth = (constraints.maxWidth * progress)
+                  .clamp(0.0, constraints.maxWidth);
+              return Stack(
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut,
+                    width: progressWidth,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      gradient: AppTheme.primaryGradient,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
 
@@ -48,11 +54,14 @@ class AnalysisProgressIndicator extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              message,
-              style: GoogleFonts.nunito(
-                fontSize: 14,
-                color: const Color(0xFF718096),
+            Expanded(
+              child: Text(
+                message,
+                style: GoogleFonts.nunito(
+                  fontSize: 14,
+                  color: const Color(0xFF718096),
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
             Text(
