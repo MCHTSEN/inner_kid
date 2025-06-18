@@ -7,7 +7,6 @@ import 'package:inner_kid/features/home_dashboard/providers/home_dashboard_provi
 import 'package:inner_kid/features/home_dashboard/widgets/child_selector_menu.dart';
 import 'package:inner_kid/features/home_dashboard/widgets/daily_insight_card.dart';
 import 'package:inner_kid/features/home_dashboard/widgets/daily_recommendations.dart';
-import 'package:inner_kid/features/home_dashboard/widgets/quick_analysis_section.dart';
 import 'package:inner_kid/features/home_dashboard/widgets/recent_analyses_section.dart';
 
 class HomeDashboardPage extends ConsumerWidget {
@@ -88,19 +87,12 @@ class HomeDashboardPage extends ConsumerWidget {
 
             const SizedBox(height: 24),
 
-            // Quick Analysis Section
-            _buildSectionHeader('Hızlı Analiz'),
-            const SizedBox(height: 12),
-            const QuickAnalysisSection(),
-
-            const SizedBox(height: 24),
-
             // Recent Analyses
             if (data.recentAnalyses.isNotEmpty) ...[
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildSectionHeader('Geçmiş Analizler'),
+                  _buildSectionHeader('Analizlerin'),
                   TextButton(
                     onPressed: () {
                       // Navigate to all analyses page
