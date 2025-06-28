@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:inner_kid/core/models/drawing_analysis.dart';
+import 'package:inner_kid/features/analysis_flow/views/analysis_results_page.dart';
 import 'package:intl/intl.dart';
 
 class RecentAnalysesSection extends StatelessWidget {
@@ -47,8 +48,15 @@ class RecentAnalysesSection extends StatelessWidget {
       shadowColor: Colors.black.withOpacity(0.1),
       child: InkWell(
         onTap: () {
-          // Navigate to analysis details
-          // Navigator.pushNamed(context, '/analysis-details', arguments: analysis.id);
+          // Navigate to proper analysis results page
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AnalysisResultsPage(
+                analysisId: analysis.id,
+              ),
+            ),
+          );
         },
         borderRadius: BorderRadius.circular(16),
         child: Padding(
@@ -390,8 +398,40 @@ class RecentAnalysesSection extends StatelessWidget {
       elevation: 1,
       child: InkWell(
         onTap: () {
-          // Navigate to all analyses page
-          // Navigator.pushNamed(context, '/all-analyses');
+          // Navigate to all analyses page - for now show a list
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => Scaffold(
+                appBar: AppBar(
+                  title: Text('Tüm Analizler'),
+                  backgroundColor: Colors.white,
+                  foregroundColor: Color(0xFF2D3748),
+                ),
+                body: ListView.builder(
+                  padding: EdgeInsets.all(16),
+                  itemCount: analyses.length,
+                  itemBuilder: (context, index) {
+                    final analysis = analyses[index];
+                    return Card(
+                      margin: EdgeInsets.only(bottom: 12),
+                      child: ListTile(
+                        title: Text(analysis.testType.displayName),
+                        subtitle: Text(
+                            '${_formatDate(analysis.uploadDate)} - ${analysis.status.displayName}'),
+                        leading: Icon(Icons.analytics),
+                        trailing: Icon(Icons.chevron_right),
+                        onTap: () {
+                          Navigator.pop(context);
+                          // Navigate to specific analysis...
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          );
         },
         borderRadius: BorderRadius.circular(12),
         child: Container(
@@ -435,15 +475,19 @@ class RecentAnalysesSection extends StatelessWidget {
   }
 
   Widget _buildThumbnail(DrawingAnalysis analysis) {
-    // Debug: Log the image URL
-    debugPrint(
-        '📸 Image URL for analysis ${analysis.id}: ${analysis.imageUrl}');
-
     // Check if URL is a valid Firebase Storage URL
     final isValidUrl = analysis.imageUrl.isNotEmpty &&
         (analysis.imageUrl.startsWith('https://') ||
             analysis.imageUrl.startsWith('http://')) &&
         !analysis.imageUrl.startsWith('mock_');
+
+    // Check if it's a mock image that we should handle specially
+    final isMockImage = analysis.imageUrl.startsWith('mock_image_');
+
+    // For mock images, try to load from assets
+    final assetImagePath = isMockImage
+        ? 'assets/images/${analysis.imageUrl.replaceAll('mock_', '')}.jpg'
+        : null;
 
     return Container(
       width: 60,
@@ -468,12 +512,23 @@ class RecentAnalysesSection extends StatelessWidget {
                   return _buildThumbnailPlaceholder();
                 },
               )
-            : _buildThumbnailPlaceholder(showMockIcon: true),
+            : isMockImage && assetImagePath != null
+                ? Image.asset(
+                    assetImagePath,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return _buildThumbnailPlaceholder(
+                          showMockIcon: true, testType: analysis.testType);
+                    },
+                  )
+                : _buildThumbnailPlaceholder(
+                    showMockIcon: true, testType: analysis.testType),
       ),
     );
   }
 
-  Widget _buildThumbnailPlaceholder({bool showMockIcon = false}) {
+  Widget _buildThumbnailPlaceholder(
+      {bool showMockIcon = false, DrawingTestType? testType}) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -491,8 +546,8 @@ class RecentAnalysesSection extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.palette_outlined,
-                  color: const Color(0xFF667EEA),
+                  _getTestTypeIcon(testType),
+                  color: _getTestTypeColor(testType),
                   size: 20,
                 ),
                 const SizedBox(height: 2),
@@ -500,7 +555,7 @@ class RecentAnalysesSection extends StatelessWidget {
                   'Çizim',
                   style: GoogleFonts.nunito(
                     fontSize: 8,
-                    color: const Color(0xFF667EEA),
+                    color: _getTestTypeColor(testType),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -568,6 +623,40 @@ class RecentAnalysesSection extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  IconData _getTestTypeIcon(DrawingTestType? type) {
+    if (type == null) return Icons.palette_outlined;
+
+    switch (type) {
+      case DrawingTestType.familyDrawing:
+        return Icons.family_restroom;
+      case DrawingTestType.selfPortrait:
+        return Icons.person;
+      case DrawingTestType.houseTreePerson:
+        return Icons.home;
+      case DrawingTestType.narrativeDrawing:
+        return Icons.auto_stories;
+      case DrawingTestType.emotionalStates:
+        return Icons.psychology;
+    }
+  }
+
+  Color _getTestTypeColor(DrawingTestType? type) {
+    if (type == null) return const Color(0xFF667EEA);
+
+    switch (type) {
+      case DrawingTestType.familyDrawing:
+        return const Color(0xFF667EEA);
+      case DrawingTestType.selfPortrait:
+        return const Color(0xFF48BB78);
+      case DrawingTestType.houseTreePerson:
+        return const Color(0xFFED8936);
+      case DrawingTestType.narrativeDrawing:
+        return const Color(0xFF9F7AEA);
+      case DrawingTestType.emotionalStates:
+        return const Color(0xFFECC94B);
+    }
   }
 
   String _formatDate(DateTime date) {

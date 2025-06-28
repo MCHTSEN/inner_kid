@@ -93,7 +93,8 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage> {
             const SizedBox(height: 20),
 
             // All analysis sections in vertical layout
-            _buildReadableAnalysisParametersVertical(insights),
+            _buildReadableAnalysisParametersVertical(
+                insights, results.rawAnalysisData),
 
             const SizedBox(height: 20),
 
@@ -631,7 +632,8 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage> {
     );
   }
 
-  Widget _buildReadableAnalysisParametersVertical(AnalysisInsights insights) {
+  Widget _buildReadableAnalysisParametersVertical(
+      AnalysisInsights insights, Map<String, dynamic>? rawAnalysisData) {
     return Column(
       children: [
         // Ana Değerlendirme - Kompakt versiyon
@@ -640,9 +642,14 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage> {
         const SizedBox(height: 16),
 
         // Öne Çıkan Temalar - Tag format (Always show)
-        _buildCompactKeyFindingsCard(insights.keyFindings.isNotEmpty
-            ? insights.keyFindings
-            : ['Yaratıcı ifade', 'Gelişim göstergeleri', 'Pozitif duygular']),
+        _buildCompactKeyFindingsCard(_getEmergingThemes(rawAnalysisData) ??
+            (insights.keyFindings.isNotEmpty
+                ? insights.keyFindings
+                : [
+                    'Yaratıcı ifade',
+                    'Gelişim göstergeleri',
+                    'Pozitif duygular'
+                  ])),
 
         const SizedBox(height: 16),
 
@@ -651,7 +658,8 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage> {
           'Duygusal Durumu',
           Icons.psychology,
           const Color(0xFFE53E3E),
-          insights.detailedAnalysis['emotionalIndicators'] ??
+          _getAnalysisText(rawAnalysisData, 'emotional_signals') ??
+              insights.detailedAnalysis['emotionalIndicators'] ??
               'Çocuğunuzun çiziminde pozitif duygusal göstergeler mevcuttur. Renk seçimleri ve çizim tarzı genel olarak mutlu bir ruh halini yansıtmaktadır.',
           '🎭 Çocuğunuzun duygusal durumu nasıl?',
         ),
@@ -662,7 +670,8 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage> {
           'Gelişim Seviyesi',
           Icons.trending_up,
           const Color(0xFF38A169),
-          insights.detailedAnalysis['developmentLevel'] ??
+          _getAnalysisText(rawAnalysisData, 'developmental_indicators') ??
+              insights.detailedAnalysis['developmentLevel'] ??
               'Çizim becerileri yaşına uygun gelişim göstermektedir. Motor beceriler ve el-göz koordinasyonu yaşıtlarıyla benzer seviyededir.',
           '📈 Yaşına göre gelişim durumu',
         ),
@@ -673,7 +682,8 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage> {
           'Sosyal Bağları',
           Icons.group,
           const Color(0xFF3182CE),
-          insights.detailedAnalysis['socialAspects'] ??
+          _getAnalysisText(rawAnalysisData, 'social_and_family_context') ??
+              insights.detailedAnalysis['socialAspects'] ??
               'Çizimde sosyal etkileşim ve aile bağlarına dair pozitif işaretler görülmektedir. Çevresiyle sağlıklı ilişkiler kurma eğilimi göstermektedir.',
           '👨‍👩‍👧‍👦 Aile ve çevre ile ilişkisi',
         ),
@@ -684,7 +694,8 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage> {
           'Yaratıcılık',
           Icons.auto_awesome,
           const Color(0xFF805AD5),
-          insights.detailedAnalysis['creativityMarkers'] ??
+          _getAnalysisText(rawAnalysisData, 'symbolic_content') ??
+              insights.detailedAnalysis['creativityMarkers'] ??
               'Yaratıcı düşünce becerileri ve hayal gücü çizimde kendini göstermektedir. Orijinal yaklaşımlar ve detay zenginliği dikkat çekicidir.',
           '🎨 Yaratıcı düşünce ve hayal gücü',
         ),
@@ -692,14 +703,15 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage> {
         const SizedBox(height: 16),
 
         // Kompakt Öneriler (Always show)
-        _buildCompactRecommendationsCard(insights.recommendations.isNotEmpty
-            ? insights.recommendations
-            : [
-                'Çocuğunuzla birlikte sanat aktiviteleri yapın',
-                'Yaratıcı oyunları destekleyin',
-                'Çizimlerini evde sergilemeye devam edin',
-                'Farklı sanat malzemeleriyle deneyim fırsatları sağlayın'
-              ]),
+        _buildCompactRecommendationsCard(_getRecommendations(rawAnalysisData) ??
+            (insights.recommendations.isNotEmpty
+                ? insights.recommendations
+                : [
+                    'Çocuğunuzla birlikte sanat aktiviteleri yapın',
+                    'Yaratıcı oyunları destekleyin',
+                    'Çizimlerini evde sergilemeye devam edin',
+                    'Farklı sanat malzemeleriyle deneyim fırsatları sağlayın'
+                  ])),
       ],
     );
   }
@@ -1873,5 +1885,57 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage> {
       ),
       builder: (context) => const ShareOptionsWidget(),
     );
+  }
+
+  /// Helper method to extract text from raw analysis data
+  String? _getAnalysisText(Map<String, dynamic>? rawData, String key) {
+    if (rawData == null) return null;
+
+    final analysis = rawData['analysis'] as Map<String, dynamic>?;
+    if (analysis == null) return null;
+
+    final section = analysis[key] as Map<String, dynamic>?;
+    if (section == null) return null;
+
+    return section['text'] as String?;
+  }
+
+  /// Helper method to extract emerging themes from raw analysis data
+  List<String>? _getEmergingThemes(Map<String, dynamic>? rawData) {
+    if (rawData == null) return null;
+
+    final analysis = rawData['analysis'] as Map<String, dynamic>?;
+    if (analysis == null) return null;
+
+    final themes = analysis['emerging_themes'] as List?;
+    if (themes == null) return null;
+
+    return themes.cast<String>();
+  }
+
+  /// Helper method to extract recommendations from raw analysis data
+  List<String>? _getRecommendations(Map<String, dynamic>? rawData) {
+    if (rawData == null) return null;
+
+    final analysis = rawData['analysis'] as Map<String, dynamic>?;
+    if (analysis == null) return null;
+
+    final recommendations =
+        analysis['recommendations'] as Map<String, dynamic>?;
+    if (recommendations == null) return null;
+
+    final allRecommendations = <String>[];
+
+    final parentingTips = recommendations['parenting_tips'] as List?;
+    if (parentingTips != null) {
+      allRecommendations.addAll(parentingTips.cast<String>());
+    }
+
+    final activityIdeas = recommendations['activity_ideas'] as List?;
+    if (activityIdeas != null) {
+      allRecommendations.addAll(activityIdeas.cast<String>());
+    }
+
+    return allRecommendations.isNotEmpty ? allRecommendations : null;
   }
 }

@@ -36,10 +36,12 @@ class DrawingAnalysisModel {
 
   factory DrawingAnalysisModel.fromJson(Map<String, dynamic> json) {
     return DrawingAnalysisModel(
-      language: json['language'] as String,
-      summary: json['summary'] as String,
-      analysis: Analysis.fromJson(json['analysis'] as Map<String, dynamic>),
-      nextSummaryHelper: json['next_summary_helper'] as String,
+      language: (json['language'] as String?) ?? 'tr',
+      summary: (json['summary'] as String?) ?? 'Analiz tamamlandı',
+      analysis: json['analysis'] != null
+          ? Analysis.fromJson(json['analysis'] as Map<String, dynamic>)
+          : Analysis.empty(),
+      nextSummaryHelper: (json['next_summary_helper'] as String?) ?? '',
     );
   }
 
@@ -72,14 +74,31 @@ class Analysis {
 
   factory Analysis.fromJson(Map<String, dynamic> json) {
     return Analysis(
-      emotionalSignals: json['emotional_signals']['text'] as String,
+      emotionalSignals: (json['emotional_signals']?['text'] as String?) ??
+          'Duygusal analiz henüz mevcut değil',
       developmentalIndicators:
-          json['developmental_indicators']['text'] as String,
-      symbolicContent: json['symbolic_content']['text'] as String,
+          (json['developmental_indicators']?['text'] as String?) ??
+              'Gelişim analizi henüz mevcut değil',
+      symbolicContent: (json['symbolic_content']?['text'] as String?) ??
+          'Sembolik analiz henüz mevcut değil',
       socialAndFamilyContext:
-          json['social_and_family_context']['text'] as String,
+          (json['social_and_family_context']?['text'] as String?) ??
+              'Sosyal analiz henüz mevcut değil',
       emergingThemes: List<String>.from(json['emerging_themes'] ?? []),
-      recommendations: Recommendations.fromJson(json['recommendations']),
+      recommendations: json['recommendations'] != null
+          ? Recommendations.fromJson(json['recommendations'])
+          : Recommendations.empty(),
+    );
+  }
+
+  factory Analysis.empty() {
+    return Analysis(
+      emotionalSignals: 'Duygusal analiz henüz mevcut değil',
+      developmentalIndicators: 'Gelişim analizi henüz mevcut değil',
+      symbolicContent: 'Sembolik analiz henüz mevcut değil',
+      socialAndFamilyContext: 'Sosyal analiz henüz mevcut değil',
+      emergingThemes: [],
+      recommendations: Recommendations.empty(),
     );
   }
 
@@ -108,6 +127,13 @@ class Recommendations {
     return Recommendations(
       parentingTips: List<String>.from(json['parenting_tips'] ?? []),
       activityIdeas: List<String>.from(json['activity_ideas'] ?? []),
+    );
+  }
+
+  factory Recommendations.empty() {
+    return Recommendations(
+      parentingTips: [],
+      activityIdeas: [],
     );
   }
 

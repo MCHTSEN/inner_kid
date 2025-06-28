@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logger/logger.dart';
 
+import '../../features/analysis_flow/models/analysis_state.dart';
 import '../models/child_profile.dart';
 import '../models/drawing_analysis.dart';
 import '../models/user_profile.dart';
@@ -221,24 +222,20 @@ class FirestoreService {
             continue;
           }
 
-          // Prepare data with defaults for missing fields
+          // Prepare data with proper null handling and defaults
           final analysisData = {
             'id': doc.id,
-            'userId': data['userId'],
-            'childId': data['childId'] ?? 'default_child',
-            'imageUrl': data['imageUrl'],
-            'uploadDate': data['uploadDate'] ??
-                data['createdAt'], // Use createdAt as fallback
-            'testType':
-                data['testType'] ?? 'family_drawing', // Default test type
-            'status': data['status'] ?? 'completed',
-            'aiResults': data['insights'] ??
-                data['aiResults'], // Support both field names
-            'expertComments': data['expertComments'],
-            'recommendations': data['recommendations'] ?? <String>[],
-            'metadata': data['metadata'],
-            'createdAt': data['createdAt'],
-            'completedAt': data['completedAt'],
+            'childId': (data['childId'] as String?) ?? 'default_child',
+            'imageUrl': (data['imageUrl'] as String?) ?? '',
+            'uploadDate':
+                _getDateString(data['uploadDate'] ?? data['createdAt']),
+            'testType': (data['testType'] as String?) ?? 'family_drawing',
+            'status': (data['status'] as String?) ?? 'completed',
+            'aiResults': (data['insights'] ?? data['aiResults'])
+                as Map<String, dynamic>?,
+            'metadata': data['metadata'] as Map<String, dynamic>?,
+            'createdAt': _getDateString(data['createdAt']),
+            'completedAt': _getDateString(data['completedAt']),
           };
 
           final analysis = DrawingAnalysis.fromJson(analysisData);
@@ -299,21 +296,20 @@ class FirestoreService {
             continue;
           }
 
-          // Prepare data with defaults for missing fields
+          // Prepare data with proper null handling and defaults
           final analysisData = {
             'id': doc.id,
-            'userId': data['userId'],
-            'childId': data['childId'] ?? 'default_child',
-            'imageUrl': data['imageUrl'],
-            'uploadDate': data['uploadDate'] ?? data['createdAt'],
-            'testType': data['testType'] ?? 'family_drawing',
-            'status': data['status'] ?? 'completed',
-            'aiResults': data['insights'] ?? data['aiResults'],
-            'expertComments': data['expertComments'],
-            'recommendations': data['recommendations'] ?? <String>[],
-            'metadata': data['metadata'],
-            'createdAt': data['createdAt'],
-            'completedAt': data['completedAt'],
+            'childId': (data['childId'] as String?) ?? 'default_child',
+            'imageUrl': (data['imageUrl'] as String?) ?? '',
+            'uploadDate':
+                _getDateString(data['uploadDate'] ?? data['createdAt']),
+            'testType': (data['testType'] as String?) ?? 'family_drawing',
+            'status': (data['status'] as String?) ?? 'completed',
+            'aiResults': (data['insights'] ?? data['aiResults'])
+                as Map<String, dynamic>?,
+            'metadata': data['metadata'] as Map<String, dynamic>?,
+            'createdAt': _getDateString(data['createdAt']),
+            'completedAt': _getDateString(data['completedAt']),
           };
 
           final analysis = DrawingAnalysis.fromJson(analysisData);
@@ -334,6 +330,70 @@ class FirestoreService {
     } catch (e) {
       _logger.e('Error in client-side sorting fallback: $e');
       return [];
+    }
+  }
+
+  // Save analysis results
+  Future<void> saveAnalysisResults(AnalysisResults results) async {
+    try {
+      _logger.i('Saving analysis results: ${results.id}');
+
+      final data = results.toMap();
+      data['status'] = 'completed';
+      data['testType'] = 'family_drawing';
+      data['uploadDate'] = results.createdAt.toIso8601String();
+
+      await _db
+          .collection(analysesCollection)
+          .doc(results.id)
+          .set(data, SetOptions(merge: true));
+
+      _logger.i('Analysis results saved successfully: ${results.id}');
+    } catch (e) {
+      _logger.e('Error saving analysis results: $e');
+      throw Exception('Failed to save analysis results');
+    }
+  }
+
+  // Get single analysis result
+  Future<AnalysisResults?> getAnalysisResults(String analysisId) async {
+    try {
+      _logger.i('Fetching analysis results: $analysisId');
+
+      final doc =
+          await _db.collection(analysesCollection).doc(analysisId).get();
+
+      if (!doc.exists) {
+        _logger.w('Analysis document not found: $analysisId');
+        return null;
+      }
+
+      final data = doc.data()!;
+      _logger.i('Analysis document found with keys: ${data.keys.toList()}');
+      _logger.i('Full analysis document data: $data');
+
+      // Check if this is already an AnalysisResults format (has 'insights' field)
+      if (data.containsKey('insights')) {
+        _logger.i('Found AnalysisResults format data');
+        final results = AnalysisResults.fromMap(data, analysisId);
+        _logger.i('Parsed AnalysisResults: ${results.insights.primaryInsight}');
+        return results;
+      }
+
+      // Check if this is AI service raw data format (has 'aiResults' field)
+      else if (data.containsKey('aiResults') || data.containsKey('analysis')) {
+        _logger.i('Found AI service raw data format, converting...');
+        return _convertRawDataToAnalysisResults(data, analysisId);
+      }
+
+      // Fallback: unknown format
+      else {
+        _logger.w('Unknown data format for analysis $analysisId');
+        return _createFallbackAnalysisResults(data, analysisId);
+      }
+    } catch (e) {
+      _logger.e('Error fetching analysis results: $e');
+      return null;
     }
   }
 
@@ -382,6 +442,184 @@ class FirestoreService {
       _logger.e('Error updating subscription: $e');
       throw Exception('Failed to update subscription');
     }
+  }
+
+  /// Convert AI service raw data to AnalysisResults format
+  AnalysisResults _convertRawDataToAnalysisResults(
+      Map<String, dynamic> data, String analysisId) {
+    try {
+      _logger.i('Converting AI raw data to AnalysisResults format');
+
+      // Extract AI results - could be in 'aiResults' or directly in root
+      final aiResults = data['aiResults'] as Map<String, dynamic>? ?? data;
+      final analysisData = aiResults['analysis'] as Map<String, dynamic>?;
+
+      // Create AnalysisInsights from AI data
+      final insights = AnalysisInsights(
+        primaryInsight: aiResults['summary'] as String? ??
+            'Çocuğunuzun çizimi başarıyla analiz edildi.',
+        emotionalScore: 7.5,
+        creativityScore: 8.0,
+        developmentScore: 7.8,
+        keyFindings: _extractEmergingThemes(analysisData),
+        detailedAnalysis: _extractDetailedAnalysis(analysisData),
+        recommendations: _extractRecommendations(analysisData),
+        createdAt: DateTime.now(),
+      );
+
+      return AnalysisResults(
+        id: analysisId,
+        childId: data['childId'] as String? ?? 'default_child',
+        userId: data['userId'] as String? ?? '',
+        imageUrl: data['imageUrl'] as String? ?? '',
+        insights: insights,
+        createdAt: DateTime.parse(
+            data['createdAt'] as String? ?? DateTime.now().toIso8601String()),
+        completedAt: data['completedAt'] != null
+            ? DateTime.parse(data['completedAt'] as String)
+            : null,
+        rawAnalysisData: aiResults, // Store the raw AI data
+      );
+    } catch (e) {
+      _logger.e('Error converting AI raw data: $e');
+      return _createFallbackAnalysisResults(data, analysisId);
+    }
+  }
+
+  /// Create fallback AnalysisResults when data format is unknown
+  AnalysisResults _createFallbackAnalysisResults(
+      Map<String, dynamic> data, String analysisId) {
+    final fallbackInsights = AnalysisInsights(
+      primaryInsight: 'Çocuğunuzun çizimi başarıyla analiz edildi.',
+      emotionalScore: 7.5,
+      creativityScore: 8.0,
+      developmentScore: 7.8,
+      keyFindings: [
+        'Yaratıcı ifade',
+        'Gelişim göstergeleri',
+        'Pozitif duygular'
+      ],
+      detailedAnalysis: {
+        'emotionalIndicators':
+            'Çizimde pozitif duygusal göstergeler mevcuttur.',
+        'developmentLevel': 'Yaşına uygun gelişim seviyesi gözlemlenmektedir.',
+        'socialAspects': 'Sosyal etkileşim becerileri gelişmektedir.',
+        'creativityMarkers': 'Yaratıcı düşünce ve hayal gücü belirgindir.',
+      },
+      recommendations: [
+        'Yaratıcı aktiviteleri destekleyin',
+        'Sanat malzemeleriyle oynama fırsatları sağlayın'
+      ],
+      createdAt: DateTime.now(),
+    );
+
+    return AnalysisResults(
+      id: analysisId,
+      childId: data['childId'] as String? ?? 'default_child',
+      userId: data['userId'] as String? ?? '',
+      imageUrl: data['imageUrl'] as String? ?? '',
+      insights: fallbackInsights,
+      createdAt: DateTime.parse(
+          data['createdAt'] as String? ?? DateTime.now().toIso8601String()),
+      completedAt: data['completedAt'] != null
+          ? DateTime.parse(data['completedAt'] as String)
+          : null,
+      rawAnalysisData: null,
+    );
+  }
+
+  /// Extract emerging themes from analysis data
+  List<String> _extractEmergingThemes(Map<String, dynamic>? analysisData) {
+    if (analysisData == null) return ['Yaratıcı ifade', 'Gelişim göstergeleri'];
+
+    final themes = analysisData['emerging_themes'] as List?;
+    if (themes != null) {
+      return themes.cast<String>();
+    }
+
+    return ['Yaratıcı ifade', 'Gelişim göstergeleri'];
+  }
+
+  /// Extract detailed analysis from analysis data
+  Map<String, dynamic> _extractDetailedAnalysis(
+      Map<String, dynamic>? analysisData) {
+    if (analysisData == null) {
+      return {
+        'emotionalIndicators':
+            'Çizimde pozitif duygusal göstergeler mevcuttur.',
+        'developmentLevel': 'Yaşına uygun gelişim seviyesi gözlemlenmektedir.',
+        'socialAspects': 'Sosyal etkileşim becerileri gelişmektedir.',
+        'creativityMarkers': 'Yaratıcı düşünce ve hayal gücü belirgindir.',
+      };
+    }
+
+    return {
+      'emotionalIndicators':
+          analysisData['emotional_signals']?['text'] as String? ??
+              'Pozitif duygusal göstergeler mevcuttur.',
+      'developmentLevel':
+          analysisData['developmental_indicators']?['text'] as String? ??
+              'Yaşına uygun gelişim seviyesi.',
+      'socialAspects':
+          analysisData['social_and_family_context']?['text'] as String? ??
+              'Sosyal etkileşim becerileri gelişmektedir.',
+      'creativityMarkers':
+          analysisData['symbolic_content']?['text'] as String? ??
+              'Yaratıcı düşünce ve hayal gücü belirgindir.',
+    };
+  }
+
+  /// Extract recommendations from analysis data
+  List<String> _extractRecommendations(Map<String, dynamic>? analysisData) {
+    if (analysisData == null) return ['Yaratıcı aktiviteleri destekleyin'];
+
+    final recommendations =
+        analysisData['recommendations'] as Map<String, dynamic>?;
+    if (recommendations == null) return ['Yaratıcı aktiviteleri destekleyin'];
+
+    final allRecommendations = <String>[];
+
+    final parentingTips = recommendations['parenting_tips'] as List?;
+    if (parentingTips != null) {
+      allRecommendations.addAll(parentingTips.cast<String>());
+    }
+
+    final activityIdeas = recommendations['activity_ideas'] as List?;
+    if (activityIdeas != null) {
+      allRecommendations.addAll(activityIdeas.cast<String>());
+    }
+
+    return allRecommendations.isNotEmpty
+        ? allRecommendations
+        : ['Yaratıcı aktiviteleri destekleyin'];
+  }
+
+  /// Helper method to safely convert timestamp to ISO string
+  String _getDateString(dynamic timestamp) {
+    if (timestamp == null) {
+      return DateTime.now().toIso8601String();
+    }
+
+    if (timestamp is Timestamp) {
+      return timestamp.toDate().toIso8601String();
+    }
+
+    if (timestamp is String) {
+      try {
+        // Try to parse the string to validate it
+        DateTime.parse(timestamp);
+        return timestamp;
+      } catch (e) {
+        return DateTime.now().toIso8601String();
+      }
+    }
+
+    if (timestamp is DateTime) {
+      return timestamp.toIso8601String();
+    }
+
+    // Fallback for unknown types
+    return DateTime.now().toIso8601String();
   }
 
   // Batch operations

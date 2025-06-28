@@ -99,7 +99,7 @@ class AnalysisResults {
   final AnalysisInsights insights;
   final String? reportUrl;
   final DateTime createdAt;
-  final DateTime? completedAt;
+  final DateTime? completedAt;  final Map<String, dynamic>? rawAnalysisData; // Full AI analysis data
 
   const AnalysisResults({
     required this.id,
@@ -110,6 +110,7 @@ class AnalysisResults {
     this.reportUrl,
     required this.createdAt,
     this.completedAt,
+    this.rawAnalysisData,
   });
 
   factory AnalysisResults.fromMap(Map<String, dynamic> map, String id) {
@@ -125,6 +126,7 @@ class AnalysisResults {
       completedAt: map['completedAt'] != null
           ? DateTime.parse(map['completedAt'])
           : null,
+      rawAnalysisData: map['rawAnalysisData'] as Map<String, dynamic>?,
     );
   }
 
@@ -137,6 +139,7 @@ class AnalysisResults {
       'reportUrl': reportUrl,
       'createdAt': createdAt.toIso8601String(),
       'completedAt': completedAt?.toIso8601String(),
+      'rawAnalysisData': rawAnalysisData,
     };
   }
 }

@@ -145,11 +145,20 @@ class AnalysisViewModel extends StateNotifier<AnalysisState> {
         insights: insights,
         createdAt: DateTime.now(),
         completedAt: DateTime.now(),
+        rawAnalysisData: aiResult['results'], // Store full AI analysis data
       );
 
       await _updateProgress(0.95, 'Sonuçlar kaydediliyor...');
 
-      // Save analysis to Firestore (already handled by AI service)
+      // Save analysis results to Firestore
+      try {
+        await _firestoreService.saveAnalysisResults(results);
+        _logger.i('Analysis results saved to Firestore: $analysisId');
+      } catch (e) {
+        _logger.e('Failed to save analysis results to Firestore: $e');
+        // Continue anyway since AI analysis was successful
+      }
+
       await _updateProgress(1.0, 'Analiz tamamlandı!');
 
       // Set completed state
@@ -191,7 +200,19 @@ class AnalysisViewModel extends StateNotifier<AnalysisState> {
         insights: insights,
         createdAt: DateTime.now(),
         completedAt: DateTime.now(),
+        rawAnalysisData: null, // No raw data for fallback analysis
       );
+
+      await _updateProgress(0.9, 'Sonuçlar kaydediliyor...');
+
+      // Save fallback analysis results to Firestore
+      try {
+        await _firestoreService.saveAnalysisResults(results);
+        _logger.i('Fallback analysis results saved to Firestore: $analysisId');
+      } catch (e) {
+        _logger.e('Failed to save fallback analysis results to Firestore: $e');
+        // Continue anyway since analysis was successful
+      }
 
       await _updateProgress(1.0, 'Analiz tamamlandı!');
 
@@ -376,15 +397,27 @@ class AnalysisViewModel extends StateNotifier<AnalysisState> {
   /// Load existing analysis results
   Future<void> loadAnalysisResults(String analysisId) async {
     try {
+      _logger.i('Loading analysis results: $analysisId');
       state = state.copyWith(isLoading: true, errorMessage: null);
 
-      // TODO: Implement getAnalysis method in FirestoreService
-      // For now, just set completed state
-      state = state.copyWith(
-        analysisId: analysisId,
-        status: AnalysisStatus.completed,
-        isLoading: false,
-      );
+      // Fetch analysis results from Firestore
+      final results = await _firestoreService.getAnalysisResults(analysisId);
+
+      if (results != null) {
+        state = state.copyWith(
+          analysisId: analysisId,
+          status: AnalysisStatus.completed,
+          results: results,
+          isLoading: false,
+        );
+        _logger.i('Analysis results loaded successfully: $analysisId');
+      } else {
+        state = state.copyWith(
+          errorMessage: 'Analiz sonuçları bulunamadı',
+          isLoading: false,
+        );
+        _logger.w('Analysis results not found: $analysisId');
+      }
     } catch (e) {
       _logger.e('Load results error: $e');
       state = state.copyWith(
