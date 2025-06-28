@@ -7,6 +7,18 @@ import '../components/share_options_widget.dart';
 import '../models/analysis_state.dart';
 import '../viewmodels/analysis_viewmodel.dart';
 
+class AnalysisTab {
+  final String title;
+  final IconData icon;
+  final Color color;
+
+  const AnalysisTab({
+    required this.title,
+    required this.icon,
+    required this.color,
+  });
+}
+
 class AnalysisResultsPage extends ConsumerStatefulWidget {
   final String? analysisId;
 
@@ -20,10 +32,50 @@ class AnalysisResultsPage extends ConsumerStatefulWidget {
       _AnalysisResultsPageState();
 }
 
-class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage> {
+class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  int _currentIndex = 0;
+
+  final List<AnalysisTab> _tabs = [
+    AnalysisTab(
+      title: 'Özet',
+      icon: Icons.summarize,
+      color: const Color(0xFF667EEA),
+    ),
+    AnalysisTab(
+      title: 'Duygular',
+      icon: Icons.favorite,
+      color: const Color(0xFFE53E3E),
+    ),
+    AnalysisTab(
+      title: 'Gelişim',
+      icon: Icons.trending_up,
+      color: const Color(0xFF38A169),
+    ),
+    AnalysisTab(
+      title: 'Sosyal',
+      icon: Icons.group,
+      color: const Color(0xFF3182CE),
+    ),
+    AnalysisTab(
+      title: 'Öneriler',
+      icon: Icons.lightbulb,
+      color: const Color(0xFF805AD5),
+    ),
+  ];
+
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: _tabs.length, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() {
+          _currentIndex = _tabController.index;
+        });
+      }
+    });
 
     // Load analysis if ID provided
     if (widget.analysisId != null) {
@@ -33,6 +85,12 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage> {
             .loadAnalysisResults(widget.analysisId!);
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
@@ -82,27 +140,37 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Compact drawing preview
-            _buildCompactDrawingPreview(results.imageUrl),
+      body: Column(
+        children: [
+          // Compact drawing preview - always visible
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: _buildCompactDrawingPreview(results.imageUrl),
+          ),
 
-            const SizedBox(height: 20),
+          // Custom Tab Bar
+          _buildCustomTabBar(),
 
-            // All analysis sections in vertical layout
-            _buildReadableAnalysisParametersVertical(insights),
+          // Tab Content
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildSummaryTab(insights),
+                _buildEmotionalTab(insights),
+                _buildDevelopmentTab(insights),
+                _buildSocialTab(insights),
+                _buildRecommendationsTab(insights),
+              ],
+            ),
+          ),
 
-            const SizedBox(height: 20),
-
-            // Action buttons
-            _buildActionButtons(),
-
-            const SizedBox(height: 24),
-          ],
-        ),
+          // Action buttons - always visible
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: _buildActionButtons(),
+          ),
+        ],
       ),
     );
   }
@@ -631,98 +699,24 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage> {
     );
   }
 
-  Widget _buildReadableAnalysisParametersVertical(AnalysisInsights insights) {
-    return Column(
-      children: [
-        // Ana Değerlendirme - Kompakt versiyon
-        _buildMainInsightCard(insights.primaryInsight),
-
-        const SizedBox(height: 16),
-
-        // Öne Çıkan Temalar - Tag format (Always show)
-        _buildCompactKeyFindingsCard(insights.keyFindings.isNotEmpty
-            ? insights.keyFindings
-            : ['Yaratıcı ifade', 'Gelişim göstergeleri', 'Pozitif duygular']),
-
-        const SizedBox(height: 16),
-
-        // Expandable Analysis Sections (Always show with fallback content)
-        _buildExpandableAnalysisCard(
-          'Duygusal Durumu',
-          Icons.psychology,
-          const Color(0xFFE53E3E),
-          insights.detailedAnalysis['emotionalIndicators'] ??
-              'Çocuğunuzun çiziminde pozitif duygusal göstergeler mevcuttur. Renk seçimleri ve çizim tarzı genel olarak mutlu bir ruh halini yansıtmaktadır.',
-          '🎭 Çocuğunuzun duygusal durumu nasıl?',
-        ),
-
-        const SizedBox(height: 12),
-
-        _buildExpandableAnalysisCard(
-          'Gelişim Seviyesi',
-          Icons.trending_up,
-          const Color(0xFF38A169),
-          insights.detailedAnalysis['developmentLevel'] ??
-              'Çizim becerileri yaşına uygun gelişim göstermektedir. Motor beceriler ve el-göz koordinasyonu yaşıtlarıyla benzer seviyededir.',
-          '📈 Yaşına göre gelişim durumu',
-        ),
-
-        const SizedBox(height: 12),
-
-        _buildExpandableAnalysisCard(
-          'Sosyal Bağları',
-          Icons.group,
-          const Color(0xFF3182CE),
-          insights.detailedAnalysis['socialAspects'] ??
-              'Çizimde sosyal etkileşim ve aile bağlarına dair pozitif işaretler görülmektedir. Çevresiyle sağlıklı ilişkiler kurma eğilimi göstermektedir.',
-          '👨‍👩‍👧‍👦 Aile ve çevre ile ilişkisi',
-        ),
-
-        const SizedBox(height: 12),
-
-        _buildExpandableAnalysisCard(
-          'Yaratıcılık',
-          Icons.auto_awesome,
-          const Color(0xFF805AD5),
-          insights.detailedAnalysis['creativityMarkers'] ??
-              'Yaratıcı düşünce becerileri ve hayal gücü çizimde kendini göstermektedir. Orijinal yaklaşımlar ve detay zenginliği dikkat çekicidir.',
-          '🎨 Yaratıcı düşünce ve hayal gücü',
-        ),
-
-        const SizedBox(height: 16),
-
-        // Kompakt Öneriler (Always show)
-        _buildCompactRecommendationsCard(insights.recommendations.isNotEmpty
-            ? insights.recommendations
-            : [
-                'Çocuğunuzla birlikte sanat aktiviteleri yapın',
-                'Yaratıcı oyunları destekleyin',
-                'Çizimlerini evde sergilemeye devam edin',
-                'Farklı sanat malzemeleriyle deneyim fırsatları sağlayın'
-              ]),
-      ],
-    );
-  }
-
-  Widget _buildMainInsightCard(String insight) {
-    if (insight.isEmpty) return const SizedBox.shrink();
+  Widget _buildHighlightCard(
+      String title, String content, IconData icon, Color color) {
+    if (content.isEmpty) return const SizedBox.shrink();
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFF667EEA).withOpacity(0.1),
-            const Color(0xFF764BA2).withOpacity(0.1),
+            color.withOpacity(0.1),
+            color.withOpacity(0.05),
           ],
         ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFF667EEA).withOpacity(0.2),
-        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -730,24 +724,20 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage> {
           Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF667EEA).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  color: color.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Icon(
-                  Icons.insights,
-                  color: Color(0xFF667EEA),
-                  size: 20,
-                ),
+                child: Icon(icon, color: color, size: 24),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               Expanded(
                 child: Text(
-                  '✨ Ana Değerlendirme',
+                  title,
                   style: GoogleFonts.nunito(
-                    fontSize: 16,
+                    fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF2D3748),
                   ),
@@ -755,12 +745,12 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Text(
-            insight,
+            content,
             style: GoogleFonts.nunito(
-              fontSize: 14,
-              height: 1.5,
+              fontSize: 16,
+              height: 1.6,
               color: const Color(0xFF4A5568),
             ),
           ),
@@ -769,419 +759,54 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage> {
     ).animate().fadeIn(delay: 100.ms);
   }
 
-  Widget _buildCompactKeyFindingsCard(List<String> keyFindings) {
-    // Always show card with fallback content if empty
-    final displayFindings =
-        keyFindings.isNotEmpty ? keyFindings : ['Analiz temaları hazırlanıyor'];
-
-    // Don't hide the card anymore
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '🏷️ Öne Çıkan Temalar',
-            style: GoogleFonts.nunito(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF2D3748),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: displayFindings
-                .take(4)
-                .map((finding) => Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF805AD5).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: const Color(0xFF805AD5).withOpacity(0.2),
-                        ),
-                      ),
-                      child: Text(
-                        finding,
-                        style: GoogleFonts.nunito(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF805AD5),
-                        ),
-                      ),
-                    ))
-                .toList(),
-          ),
-          if (displayFindings.length > 4)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                '+${displayFindings.length - 4} daha fazla tema',
-                style: GoogleFonts.nunito(
-                  fontSize: 11,
-                  color: const Color(0xFF718096),
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ),
-        ],
-      ),
-    ).animate().fadeIn(delay: 200.ms);
-  }
-
-  Widget _buildExpandableAnalysisCard(
-    String title,
-    IconData icon,
-    Color color,
-    dynamic content,
-    String subtitle,
-  ) {
-    // Always show card, even if content is null or empty
-    String displayText = '';
-    if (content is String) {
-      displayText =
-          content.isNotEmpty ? content : 'Analiz verisi henüz mevcut değil.';
-    } else if (content is List && content.isNotEmpty) {
-      displayText = content.take(3).join('\n• ');
-      if (displayText.isNotEmpty) displayText = '• $displayText';
-    } else {
-      displayText = 'Bu bölüm için analiz verisi henüz hazırlanmadı.';
-    }
-
-    return Theme(
-      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: ExpansionTile(
-          leading: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          title: Text(
-            title,
-            style: GoogleFonts.nunito(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF2D3748),
-            ),
-          ),
-          subtitle: Text(
-            subtitle,
-            style: GoogleFonts.nunito(
-              fontSize: 12,
-              color: const Color(0xFF718096),
-            ),
-          ),
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          children: [
-            Text(
-              displayText,
-              style: GoogleFonts.nunito(
-                fontSize: 13,
-                height: 1.4,
-                color: const Color(0xFF4A5568),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(delay: 300.ms);
-  }
-
-  Widget _buildCompactRecommendationsCard(List<String> recommendations) {
-    // Always show card with fallback content if empty
-    final displayRecommendations = recommendations.isNotEmpty
-        ? recommendations
-        : ['Öneriler hazırlanıyor'];
-
-    // Don't hide the card anymore
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF38A169).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.tips_and_updates,
-                  color: Color(0xFF38A169),
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                '💡 Size Öneriler',
-                style: GoogleFonts.nunito(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF2D3748),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ...displayRecommendations
-              .take(3)
-              .toList()
-              .asMap()
-              .entries
-              .map((entry) {
-            final index = entry.key;
-            final recommendation = entry.value;
-
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF38A169).withOpacity(0.05),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: const Color(0xFF38A169).withOpacity(0.1),
-                ),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 18,
-                    height: 18,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF38A169).withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(9),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${index + 1}',
-                        style: GoogleFonts.nunito(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF38A169),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      recommendation,
-                      style: GoogleFonts.nunito(
-                        fontSize: 12,
-                        height: 1.3,
-                        color: const Color(0xFF4A5568),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-          if (displayRecommendations.length > 3)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                '+${displayRecommendations.length - 3} öneri daha',
-                style: GoogleFonts.nunito(
-                  fontSize: 11,
-                  color: const Color(0xFF718096),
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ),
-        ],
-      ),
-    ).animate().fadeIn(delay: 400.ms);
-  }
-
-  Widget _buildSimpleAnalysisCard(
-      String title, String content, IconData icon, Color color) {
-    if (content.isEmpty) return const SizedBox.shrink();
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  title,
-                  style: GoogleFonts.nunito(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF2D3748),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            content,
-            style: GoogleFonts.nunito(
-              fontSize: 14,
-              height: 1.5,
-              color: const Color(0xFF4A5568),
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(delay: 300.ms);
-  }
-
-  Widget _buildKeyFindingsCard(List<String> keyFindings) {
+  Widget _buildTagStyleKeyFindings(List<String> keyFindings) {
     if (keyFindings.isEmpty) return const SizedBox.shrink();
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 2),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '🎯 Öne Çıkan Bulgular',
+          style: GoogleFonts.nunito(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF2D3748),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF805AD5).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.insights,
-                  color: Color(0xFF805AD5),
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Öne Çıkan Temalar',
-                style: GoogleFonts.nunito(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF2D3748),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: keyFindings
-                .map((finding) => Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF805AD5).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: const Color(0xFF805AD5).withOpacity(0.2),
-                        ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: keyFindings
+              .take(4)
+              .map((finding) => Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF667EEA).withOpacity(0.1),
+                          const Color(0xFF764BA2).withOpacity(0.1),
+                        ],
                       ),
-                      child: Text(
-                        finding,
-                        style: GoogleFonts.nunito(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF805AD5),
-                        ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: const Color(0xFF667EEA).withOpacity(0.3),
                       ),
-                    ))
-                .toList(),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(delay: 400.ms);
+                    ),
+                    child: Text(
+                      finding,
+                      style: GoogleFonts.nunito(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF667EEA),
+                      ),
+                    ),
+                  ))
+              .toList(),
+        ),
+      ],
+    ).animate().fadeIn(delay: 200.ms);
   }
 
   Widget _buildDetailedAnalysisCard(
@@ -1872,6 +1497,395 @@ class _AnalysisResultsPageState extends ConsumerState<AnalysisResultsPage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => const ShareOptionsWidget(),
+    );
+  }
+
+  // Custom Tab Bar
+  Widget _buildCustomTabBar() {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: _tabs.asMap().entries.map((entry) {
+          final index = entry.key;
+          final tab = entry.value;
+          final isSelected = _currentIndex == index;
+
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                _tabController.animateTo(index);
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: isSelected ? tab.color : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      tab.icon,
+                      size: 20,
+                      color: isSelected ? Colors.white : Colors.grey.shade600,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      tab.title,
+                      style: GoogleFonts.nunito(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected ? Colors.white : Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    ).animate().slideY(begin: -0.5, delay: 200.ms);
+  }
+
+  // Tab Content Widgets
+  Widget _buildSummaryTab(AnalysisInsights insights) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '📋 Analiz Özeti',
+            style: GoogleFonts.nunito(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF2D3748),
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildHighlightCard(
+            'Ana Değerlendirme',
+            insights.primaryInsight,
+            Icons.lightbulb,
+            const Color(0xFF667EEA),
+          ),
+          const SizedBox(height: 20),
+          _buildTagStyleKeyFindings(insights.keyFindings),
+        ],
+      ),
+    ).animate().fadeIn(delay: 100.ms);
+  }
+
+  Widget _buildEmotionalTab(AnalysisInsights insights) {
+    final emotionalIndicators =
+        insights.detailedAnalysis['emotionalIndicators'];
+    String content = '';
+
+    if (emotionalIndicators is String) {
+      content = emotionalIndicators;
+    } else if (emotionalIndicators is List) {
+      content = emotionalIndicators.join('\n• ');
+      if (content.isNotEmpty) content = '• $content';
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '❤️ Duygusal Analiz',
+            style: GoogleFonts.nunito(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF2D3748),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Çocuğunuzun duygusal durumu ve iç dünyası',
+            style: GoogleFonts.nunito(
+              fontSize: 14,
+              color: const Color(0xFF718096),
+            ),
+          ),
+          const SizedBox(height: 24),
+          if (content.isNotEmpty)
+            _buildContentCard(
+              content,
+              Icons.favorite,
+              const Color(0xFFE53E3E),
+            ),
+        ],
+      ),
+    ).animate().fadeIn(delay: 100.ms);
+  }
+
+  Widget _buildDevelopmentTab(AnalysisInsights insights) {
+    final developmentLevel = insights.detailedAnalysis['developmentLevel'];
+    String content = developmentLevel?.toString() ?? '';
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '📈 Gelişim Analizi',
+            style: GoogleFonts.nunito(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF2D3748),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Yaş grubuna göre gelişim seviyesi ve beceriler',
+            style: GoogleFonts.nunito(
+              fontSize: 14,
+              color: const Color(0xFF718096),
+            ),
+          ),
+          const SizedBox(height: 24),
+          if (content.isNotEmpty)
+            _buildContentCard(
+              content,
+              Icons.trending_up,
+              const Color(0xFF38A169),
+            ),
+        ],
+      ),
+    ).animate().fadeIn(delay: 100.ms);
+  }
+
+  Widget _buildSocialTab(AnalysisInsights insights) {
+    final socialAspects = insights.detailedAnalysis['socialAspects'];
+    final creativityMarkers = insights.detailedAnalysis['creativityMarkers'];
+
+    String socialContent = '';
+    String creativityContent = '';
+
+    if (socialAspects is String) {
+      socialContent = socialAspects;
+    } else if (socialAspects is List) {
+      socialContent = socialAspects.join('\n• ');
+      if (socialContent.isNotEmpty) socialContent = '• $socialContent';
+    }
+
+    if (creativityMarkers is String) {
+      creativityContent = creativityMarkers;
+    } else if (creativityMarkers is List) {
+      creativityContent = creativityMarkers.join('\n• ');
+      if (creativityContent.isNotEmpty)
+        creativityContent = '• $creativityContent';
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '👥 Sosyal & Yaratıcılık',
+            style: GoogleFonts.nunito(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF2D3748),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Sosyal etkileşim ve yaratıcı yetenekler',
+            style: GoogleFonts.nunito(
+              fontSize: 14,
+              color: const Color(0xFF718096),
+            ),
+          ),
+          const SizedBox(height: 24),
+          if (socialContent.isNotEmpty) ...[
+            _buildContentCard(
+              socialContent,
+              Icons.group,
+              const Color(0xFF3182CE),
+              title: 'Sosyal İlişkiler',
+            ),
+            const SizedBox(height: 16),
+          ],
+          if (creativityContent.isNotEmpty)
+            _buildContentCard(
+              creativityContent,
+              Icons.palette,
+              const Color(0xFF805AD5),
+              title: 'Yaratıcılık Göstergeleri',
+            ),
+        ],
+      ),
+    ).animate().fadeIn(delay: 100.ms);
+  }
+
+  Widget _buildRecommendationsTab(AnalysisInsights insights) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '💡 Önerilerimiz',
+            style: GoogleFonts.nunito(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF2D3748),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Çocuğunuzun gelişimini desteklemek için özel öneriler',
+            style: GoogleFonts.nunito(
+              fontSize: 14,
+              color: const Color(0xFF718096),
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildFullRecommendationsList(insights.recommendations),
+        ],
+      ),
+    ).animate().fadeIn(delay: 100.ms);
+  }
+
+  Widget _buildContentCard(
+    String content,
+    IconData icon,
+    Color color, {
+    String? title,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (title != null) ...[
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: GoogleFonts.nunito(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF2D3748),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ],
+          Text(
+            content,
+            style: GoogleFonts.nunito(
+              fontSize: 15,
+              height: 1.6,
+              color: const Color(0xFF4A5568),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFullRecommendationsList(List<String> recommendations) {
+    if (recommendations.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      children: recommendations.asMap().entries.map((entry) {
+        final index = entry.key;
+        final recommendation = entry.value;
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: const Color(0xFF38A169).withOpacity(0.2),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF38A169),
+                      const Color(0xFF48BB78),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Center(
+                  child: Text(
+                    '${index + 1}',
+                    style: GoogleFonts.nunito(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  recommendation,
+                  style: GoogleFonts.nunito(
+                    fontSize: 15,
+                    height: 1.5,
+                    color: const Color(0xFF4A5568),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 }

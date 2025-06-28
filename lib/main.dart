@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:inner_kid/core/navigation/main_navigation.dart';
@@ -13,6 +14,10 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables
+  await dotenv.load(fileName: ".env");
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -33,8 +38,8 @@ class InnerKidApp extends StatelessWidget {
       title: 'Inner Kid',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        primaryColor: const Color(0xFF667EEA),
+        primarySwatch: Colors.purple,
+        primaryColor: const Color.fromARGB(255, 135, 234, 102),
         scaffoldBackgroundColor: const Color(0xFFF8F9FA),
         fontFamily: GoogleFonts.nunito().fontFamily,
         visualDensity: VisualDensity.adaptivePlatformDensity,

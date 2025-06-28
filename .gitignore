@@ -49,3 +49,4 @@ lib/firebase_options.dart
 firebase_options.dart
 .firebase.json
 firebase.json
+.env

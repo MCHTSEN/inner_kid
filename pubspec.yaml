@@ -39,10 +39,6 @@ dependencies:
   firebase_storage: ^12.4.6
   firebase_analytics: ^11.5.0
   google_sign_in: ^6.1.6
-  firebase_ai: ^2.0.0
-
-  # AI Integration
-  google_generative_ai: ^0.4.4
 
   # Additional UI
   figma_squircle: ^0.6.3
@@ -54,6 +50,12 @@ dependencies:
   # Image processing
   image: ^4.2.0
   path: ^1.8.3
+
+  # Environment variables
+  flutter_dotenv: ^5.1.0
+
+  # HTTP client
+  http: ^1.2.2
 
 dev_dependencies:
   flutter_test:
@@ -71,6 +73,7 @@ flutter:
     - assets/images/
     - assets/elements/
     - assets/lotties/
+    - .env
 # flutter_launcher_icons:
 #   android: true
 #   ios: true

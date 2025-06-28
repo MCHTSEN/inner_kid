@@ -217,19 +217,66 @@ class AnalysisViewModel extends StateNotifier<AnalysisState> {
 
   /// Parse AI service results into AnalysisInsights format
   AnalysisInsights _parseAIResultsToInsights(Map<String, dynamic> aiResults) {
-    return AnalysisInsights(
-      primaryInsight: aiResults['primaryInsight'] ??
-          'Çocuğunuzun çizimi başarıyla analiz edildi.',
-      emotionalScore: (aiResults['emotionalScore'] ?? 7.5).toDouble(),
-      creativityScore: (aiResults['creativityScore'] ?? 8.0).toDouble(),
-      developmentScore: (aiResults['developmentScore'] ?? 7.8).toDouble(),
-      keyFindings: List<String>.from(aiResults['keyFindings'] ?? []),
-      detailedAnalysis: Map<String, dynamic>.from(
-        aiResults['detailedAnalysis'] ?? {},
-      ),
-      recommendations: List<String>.from(aiResults['recommendations'] ?? []),
-      createdAt: DateTime.now(),
-    );
+    try {
+      _logger.i('🔍 Parsing AI results: ${aiResults.keys}');
+      // Handle new DrawingAnalysisModel format
+      if (aiResults.containsKey('analysis') &&
+          aiResults.containsKey('summary')) {
+        final analysis = aiResults['analysis'] as Map<String, dynamic>;
+        final recommendations =
+            analysis['recommendations'] as Map<String, dynamic>? ?? {};
+
+        // Combine parenting tips and activity ideas for recommendations
+        final allRecommendations = <String>[];
+        if (recommendations['parenting_tips'] != null) {
+          allRecommendations
+              .addAll(List<String>.from(recommendations['parenting_tips']));
+        }
+        if (recommendations['activity_ideas'] != null) {
+          allRecommendations
+              .addAll(List<String>.from(recommendations['activity_ideas']));
+        }
+
+        return AnalysisInsights(
+          primaryInsight: aiResults['summary'] ??
+              'Çocuğunuzun çizimi başarıyla analiz edildi.',
+          emotionalScore:
+              7.5, // Default score since new format doesn't include numeric scores
+          creativityScore: 8.0,
+          developmentScore: 7.8,
+          keyFindings: List<String>.from(analysis['emerging_themes'] ?? []),
+          detailedAnalysis: {
+            'emotionalIndicators': analysis['emotional_signals']?['text'] ?? '',
+            'developmentLevel':
+                analysis['developmental_indicators']?['text'] ?? '',
+            'socialAspects':
+                analysis['social_and_family_context']?['text'] ?? '',
+            'creativityMarkers': analysis['symbolic_content']?['text'] ?? '',
+          },
+          recommendations: allRecommendations,
+          createdAt: DateTime.now(),
+        );
+      }
+
+      // Fallback to legacy format if new format isn't detected
+      return AnalysisInsights(
+        primaryInsight: aiResults['primaryInsight'] ??
+            'Çocuğunuzun çizimi başarıyla analiz edildi.',
+        emotionalScore: (aiResults['emotionalScore'] ?? 7.5).toDouble(),
+        creativityScore: (aiResults['creativityScore'] ?? 8.0).toDouble(),
+        developmentScore: (aiResults['developmentScore'] ?? 7.8).toDouble(),
+        keyFindings: List<String>.from(aiResults['keyFindings'] ?? []),
+        detailedAnalysis: Map<String, dynamic>.from(
+          aiResults['detailedAnalysis'] ?? {},
+        ),
+        recommendations: List<String>.from(aiResults['recommendations'] ?? []),
+        createdAt: DateTime.now(),
+      );
+    } catch (e) {
+      _logger.e('Error parsing AI results: $e');
+      // Return fallback mock data
+      return _generateMockInsights();
+    }
   }
 
   /// Generate mock AI insights

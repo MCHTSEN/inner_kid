@@ -134,55 +134,42 @@ DashboardData _getEnhancedMockDashboardData() {
       uploadDate: now.subtract(const Duration(days: 1)),
       testType: DrawingTestType.familyDrawing,
       status: AnalysisStatus.completed,
-      aiResults: {
-        'primaryInsight':
+      aiResults: DrawingAnalysisModel(
+        language: 'tr',
+        summary:
             'Ahmet ailesiyle güçlü bağlara sahip görünüyor ve kendini güvende hissediyor',
-        'emotionalScore': 88,
-        'creativityScore': 92,
-        'developmentScore': 85,
-        'keyFindings': [
-          'Aile üyeleri arasında pozitif bağlantı',
-          'Renk kullanımında duygusal denge',
-          'Figürlerin boyutları sağlıklı aile dinamiklerini gösteriyor',
-          'Detaylara verilen önem dikkat gelişimini yansıtıyor',
-          'Kompozisyon dengeli ve organize'
-        ],
-        'detailedAnalysis': {
-          'emotionalIndicators': [
-            'Pozitif duygu durumu - figürlerin yüz ifadeleri gülümsüyor',
-            'Güven hissi - aile üyeleri birbirine yakın çizilmiş',
-            'Bağlılık - el ele tutuşan figürler',
-            'Mutluluk - parlak ve canlı renkler kullanılmış'
+        analysis: Analysis(
+          emotionalSignals:
+              'Pozitif duygu durumu - figürlerin yüz ifadeleri gülümsüyor. Güven hissi - aile üyeleri birbirine yakın çizilmiş. Bağlılık - el ele tutuşan figürler. Mutluluk - parlak ve canlı renkler kullanılmış.',
+          developmentalIndicators:
+              'Yaşına uygun gelişim, hatta bazı alanlarda üstünde. Motor becerileri iyi gelişmiş, detaylara verilen önem dikkat gelişimini yansıtıyor.',
+          symbolicContent:
+              'Aile üyeleri arasında pozitif bağlantı, figürlerin boyutları sağlıklı aile dinamiklerini gösteriyor. Kompozisyon dengeli ve organize.',
+          socialAndFamilyContext:
+              'Aile bağları güçlü, sosyal farkındalık mevcut, empati becerileri gelişmiş. Güvenli bağlanma stiline sahip, kendini aile sisteminin değerli bir parçası olarak görüyor.',
+          emergingThemes: [
+            'Aile üyeleri arasında pozitif bağlantı',
+            'Renk kullanımında duygusal denge',
+            'Figürlerin boyutları sağlıklı aile dinamiklerini gösteriyor',
+            'Detaylara verilen önem dikkat gelişimini yansıtıyor',
+            'Kompozisyon dengeli ve organize'
           ],
-          'developmentLevel':
-              'Yaşına uygun gelişim, hatta bazı alanlarda üstünde',
-          'socialAspects': [
-            'Aile bağları güçlü',
-            'Sosyal farkındalık mevcut',
-            'Empati becerileri gelişmiş',
-            'İletişim becerilerine odaklı'
-          ],
-          'creativityMarkers': [
-            'Orijinal düşünce - benzersiz detaylar eklemiş',
-            'Detay odaklılık - arka plan elemanları zengin',
-            'Renk duyarlılığı - uyumlu renk paleti',
-            'Kompozisyon becerisi - dengeli yerleştirme'
-          ],
-          'psychologicalInsights': [
-            'Güvenli bağlanma stiline sahip',
-            'Aile içi rolleri net şekilde algılıyor',
-            'Kendini aile sisteminin değerli bir parçası olarak görüyor',
-            'Duygusal düzenleme becerileri yaşına uygun'
-          ]
-        },
-      },
-      recommendations: [
-        'Aile aktivitelerine devam edin, çocuğunuz bu bağlantıdan güç alıyor',
-        'Yaratıcı oyunları destekleyin, hayal gücü çok gelişmiş',
-        'Çizimlerini evde sergilemeye devam edin',
-        'Hikaye anlatma aktiviteleri ile yaratıcılığını besleyin',
-        'Aile fotoğrafları çekerek anıları güçlendirin'
-      ],
+          recommendations: Recommendations(
+            parentingTips: [
+              'Aile aktivitelerine devam edin, çocuğunuz bu bağlantıdan güç alıyor',
+              'Yaratıcı oyunları destekleyin, hayal gücü çok gelişmiş',
+              'Çizimlerini evde sergilemeye devam edin'
+            ],
+            activityIdeas: [
+              'Hikaye anlatma aktiviteleri ile yaratıcılığını besleyin',
+              'Aile fotoğrafları çekerek anıları güçlendirin',
+              'Birlikte resim yapma aktiviteleri planlayın'
+            ],
+          ),
+        ),
+        nextSummaryHelper:
+            'Çocuk aile bağlarını güçlü şekilde ifade ediyor ve pozitif duygusal durumda görünüyor.',
+      ),
       createdAt: now.subtract(const Duration(days: 1)),
       completedAt: now.subtract(const Duration(hours: 2)),
     ),
@@ -193,47 +180,42 @@ DashboardData _getEnhancedMockDashboardData() {
       uploadDate: now.subtract(const Duration(days: 3)),
       testType: DrawingTestType.selfPortrait,
       status: AnalysisStatus.completed,
-      aiResults: {
-        'primaryInsight':
+      aiResults: DrawingAnalysisModel(
+        language: 'tr',
+        summary:
             'Çocuk kendini pozitif ve özgüvenli şekilde ifade ediyor, benlik algısı sağlıklı',
-        'emotionalScore': 91,
-        'creativityScore': 87,
-        'developmentScore': 89,
-        'keyFindings': [
-          'Güçlü benlik algısı ve özgüven',
-          'Detaylı yüz ifadesi - kendini tanıma becerileri',
-          'Vücut oranları yaşına uygun gelişim gösteriyor',
-          'Renk seçimleri pozitif duygu durumunu yansıtıyor',
-          'Çizim kalitesi motor becerilerin iyi gelişimini gösteriyor'
-        ],
-        'detailedAnalysis': {
-          'emotionalIndicators': [
-            'Yüksek öz saygı - kendini büyük ve merkezi çizmiş',
-            'Pozitif benlik algısı - gülümseyen yüz ifadesi',
-            'Duygusal güvenlik - rahat ve doğal duruş',
-            'İyimserlik - parlak renkler ve neşeli atmosfer'
+        analysis: Analysis(
+          emotionalSignals:
+              'Yüksek öz saygı - kendini büyük ve merkezi çizmiş. Pozitif benlik algısı - gülümseyen yüz ifadesi. Duygusal güvenlik - rahat ve doğal duruş. İyimserlik - parlak renkler ve neşeli atmosfer.',
+          developmentalIndicators:
+              'Yaşının üzerinde gelişim gösteren alanlar mevcut. Vücut oranları yaşına uygun gelişim gösteriyor. Çizim kalitesi motor becerilerin iyi gelişimini gösteriyor.',
+          symbolicContent:
+              'Güçlü benlik algısı ve özgüven. Detaylı yüz ifadesi - kendini tanıma becerileri. Renk seçimleri pozitif duygu durumunu yansıtıyor.',
+          socialAndFamilyContext:
+              'Sosyal etkileşime açık. Kendini ifade etme becerileri güçlü. Çevresiyle uyumlu ilişkiler kurabiliyor.',
+          emergingThemes: [
+            'Güçlü benlik algısı ve özgüven',
+            'Detaylı yüz ifadesi - kendini tanıma becerileri',
+            'Vücut oranları yaşına uygun gelişim gösteriyor',
+            'Renk seçimleri pozitif duygu durumunu yansıtıyor',
+            'Çizim kalitesi motor becerilerin iyi gelişimini gösteriyor'
           ],
-          'developmentLevel':
-              'Yaşının üzerinde gelişim gösteren alanlar mevcut',
-          'socialAspects': [
-            'Sosyal etkileşime açık',
-            'Kendini ifade etme becerileri güçlü',
-            'Çevresiyle uyumlu ilişkiler kurabiliyor'
-          ],
-          'creativityMarkers': [
-            'Özgün stil geliştirmeye başlamış',
-            'Detay zenginliği dikkat çekici',
-            'Renk kombinasyonları yaratıcı',
-            'Perspektif kullanımı gelişiyor'
-          ]
-        },
-      },
-      recommendations: [
-        'Özgüven geliştiren aktivitelere devam edin',
-        'Sanat ve yaratıcılık odaklı hobiler destekleyin',
-        'Kendini ifade etme fırsatları yaratın',
-        'Başarılarını kutlayın ve teşvik edin'
-      ],
+          recommendations: Recommendations(
+            parentingTips: [
+              'Özgüven geliştiren aktivitelere devam edin',
+              'Sanat ve yaratıcılık odaklı hobiler destekleyin',
+              'Kendini ifade etme fırsatları yaratın'
+            ],
+            activityIdeas: [
+              'Başarılarını kutlayın ve teşvik edin',
+              'Ayna karşısında kendini çizme aktiviteleri yapın',
+              'Fotoğraf karşılaştırma oyunları oynayın'
+            ],
+          ),
+        ),
+        nextSummaryHelper:
+            'Çocuk güçlü benlik algısı ve özgüven gösteriyor, pozitif duygu durumunda.',
+      ),
       createdAt: now.subtract(const Duration(days: 3)),
       completedAt: now.subtract(const Duration(days: 2)),
     ),
@@ -244,46 +226,42 @@ DashboardData _getEnhancedMockDashboardData() {
       uploadDate: now.subtract(const Duration(days: 5)),
       testType: DrawingTestType.houseTreePerson,
       status: AnalysisStatus.completed,
-      aiResults: {
-        'primaryInsight':
+      aiResults: DrawingAnalysisModel(
+        language: 'tr',
+        summary:
             'Çevre algısı ve güvenlik hissi güçlü, yaşam alanını pozitif şekilde değerlendiriyor',
-        'emotionalScore': 84,
-        'creativityScore': 90,
-        'developmentScore': 87,
-        'keyFindings': [
-          'Güvenli yaşam alanı algısı',
-          'Doğayla bağlantı kurma isteği',
-          'Detaylı ve organize çizim yaklaşımı',
-          'Sembolik düşünme becerileri gelişmiş',
-          'Çevresel farkındalık yüksek'
-        ],
-        'detailedAnalysis': {
-          'emotionalIndicators': [
-            'Güvenlik hissi - sağlam ev temeli çizilmiş',
-            'Huzur - ağaç ve doğa elemanları bol',
-            'Kararlılık - net çizgiler ve form',
-            'Umut - yeşil ve mavi tonlar baskın'
+        analysis: Analysis(
+          emotionalSignals:
+              'Güvenlik hissi - sağlam ev temeli çizilmiş. Huzur - ağaç ve doğa elemanları bol. Kararlılık - net çizgiler ve form. Umut - yeşil ve mavi tonlar baskın.',
+          developmentalIndicators:
+              'Mekânsal zeka ve planlama becerileri gelişmiş. Detaylı ve organize çizim yaklaşımı. Sembolik düşünme becerileri gelişmiş.',
+          symbolicContent:
+              'Güvenli yaşam alanı algısı. Doğayla bağlantı kurma isteği. Sembolik düşünme - her eleman anlamlı. Kompozisyon becerisi üst düzey.',
+          socialAndFamilyContext:
+              'Çevre bilinci yüksek. Yaşam alanına karşı pozitif tutum. Gelecek planlaması yapabiliyor. Çevresel farkındalık yüksek.',
+          emergingThemes: [
+            'Güvenli yaşam alanı algısı',
+            'Doğayla bağlantı kurma isteği',
+            'Detaylı ve organize çizim yaklaşımı',
+            'Sembolik düşünme becerileri gelişmiş',
+            'Çevresel farkındalık yüksek'
           ],
-          'developmentLevel': 'Mekânsal zeka ve planlama becerileri gelişmiş',
-          'socialAspects': [
-            'Çevre bilinci yüksek',
-            'Yaşam alanına karşı pozitif tutum',
-            'Gelecek planlaması yapabiliyor'
-          ],
-          'creativityMarkers': [
-            'Sembolik düşünme - her eleman anlamlı',
-            'Kompozisyon becerisi üst düzey',
-            'Detay odaklılık - arka plan zengin',
-            'Renk harmonisi gelişmiş'
-          ]
-        },
-      },
-      recommendations: [
-        'Doğa aktivitelerine katılımını artırın',
-        'Çevre bilinci geliştiren projeler yapın',
-        'Mekânsal zeka oyunları oynayın',
-        'Bahçıvanlık gibi pratik aktiviteler deneyin'
-      ],
+          recommendations: Recommendations(
+            parentingTips: [
+              'Doğa aktivitelerine katılımını artırın',
+              'Çevre bilinci geliştiren projeler yapın',
+              'Mekânsal zeka oyunları oynayın'
+            ],
+            activityIdeas: [
+              'Bahçıvanlık gibi pratik aktiviteler deneyin',
+              'Ev planı çizme oyunları yapın',
+              'Doğa yürüyüşlerinde keşif aktiviteleri planlayın'
+            ],
+          ),
+        ),
+        nextSummaryHelper:
+            'Çocuk güvenli yaşam alanı algısına sahip ve doğayla güçlü bağlantı kuruyor.',
+      ),
       createdAt: now.subtract(const Duration(days: 5)),
       completedAt: now.subtract(const Duration(days: 4)),
     ),
@@ -294,26 +272,42 @@ DashboardData _getEnhancedMockDashboardData() {
       uploadDate: now.subtract(const Duration(days: 7)),
       testType: DrawingTestType.narrativeDrawing,
       status: AnalysisStatus.completed,
-      aiResults: {
-        'primaryInsight':
+      aiResults: DrawingAnalysisModel(
+        language: 'tr',
+        summary:
             'Hikaye anlatma becerisi ve hayal gücü çok gelişmiş, karmaşık duygusal durumları anlayabiliyor',
-        'emotionalScore': 89,
-        'creativityScore': 95,
-        'developmentScore': 91,
-        'keyFindings': [
-          'Üstün hayal gücü ve yaratıcılık',
-          'Karmaşık hikaye yapıları kurabilme',
-          'Duygusal derinlik ve empati',
-          'Detaylı karakter geliştirme',
-          'Sebep-sonuç ilişkilerini anlama'
-        ],
-      },
-      recommendations: [
-        'Hikaye yazma aktivitelerini teşvik edin',
-        'Tiyatro ve drama çalışmaları yapın',
-        'Yaratıcı yazım atölyeleri düşünün',
-        'Kitap okuma alışkanlığını destekleyin'
-      ],
+        analysis: Analysis(
+          emotionalSignals:
+              'Duygusal derinlik ve empati gösteriyor. Karmaşık duygusal durumları anlayabiliyor. Hikaye karakterlerinde çeşitli duygu tonları mevcut.',
+          developmentalIndicators:
+              'Üstün hayal gücü ve yaratıcılık. Karmaşık hikaye yapıları kurabilme. Sebep-sonuç ilişkilerini anlama. Detaylı karakter geliştirme becerileri.',
+          symbolicContent:
+              'Hikaye anlatma becerisi çok gelişmiş. Sembolik düşünme kapasitesi yüksek. Yaratıcı ifade biçimleri kullanıyor.',
+          socialAndFamilyContext:
+              'Sosyal dinamikleri iyi anlıyor. Karakter ilişkilerini detaylı şekilde kurgulayabiliyor. Empati becerileri gelişmiş.',
+          emergingThemes: [
+            'Üstün hayal gücü ve yaratıcılık',
+            'Karmaşık hikaye yapıları kurabilme',
+            'Duygusal derinlik ve empati',
+            'Detaylı karakter geliştirme',
+            'Sebep-sonuç ilişkilerini anlama'
+          ],
+          recommendations: Recommendations(
+            parentingTips: [
+              'Hikaye yazma aktivitelerini teşvik edin',
+              'Tiyatro ve drama çalışmaları yapın',
+              'Yaratıcı yazım atölyeleri düşünün'
+            ],
+            activityIdeas: [
+              'Kitap okuma alışkanlığını destekleyin',
+              'Birlikte hikaye uydurun ve çizin',
+              'Rol yapma oyunları oynayın'
+            ],
+          ),
+        ),
+        nextSummaryHelper:
+            'Çocuk üstün yaratıcılık ve hikaye anlatma becerileri gösteriyor.',
+      ),
       createdAt: now.subtract(const Duration(days: 7)),
       completedAt: now.subtract(const Duration(days: 6)),
     ),
