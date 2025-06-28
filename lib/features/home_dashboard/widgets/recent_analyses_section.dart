@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:inner_kid/core/models/drawing_analysis.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:inner_kid/core/models/drawing_analysis.dart';
+import 'package:inner_kid/features/analysis_flow/views/analysis_results_page.dart';
 import 'package:intl/intl.dart';
 
 class RecentAnalysesSection extends StatelessWidget {
@@ -16,86 +17,258 @@ class RecentAnalysesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: analyses.take(3).map((analysis) {
-        final index = analyses.indexOf(analysis);
-        return Padding(
-          padding: EdgeInsets.only(bottom: index < 2 ? 12 : 0),
-          child: _buildAnalysisCard(context, analysis)
-              .animate(delay: (index * 100).ms)
-              .slideX(begin: 0.3, duration: 300.ms)
-              .fadeIn(duration: 300.ms),
-        );
-      }).toList(),
+      children: [
+        // Show more analyses now (up to 5)
+        ...analyses.take(5).map((analysis) {
+          final index = analyses.indexOf(analysis);
+          return Padding(
+            padding: EdgeInsets.only(bottom: index < 4 ? 16 : 0),
+            child: _buildEnhancedAnalysisCard(context, analysis)
+                .animate(delay: (index * 100).ms)
+                .slideX(begin: 0.3, duration: 300.ms)
+                .fadeIn(duration: 300.ms),
+          );
+        }),
+
+        // Show all analyses button if there are more
+        if (analyses.length > 5) ...[
+          const SizedBox(height: 16),
+          _buildShowAllButton(context),
+        ],
+      ],
     );
   }
 
-  Widget _buildAnalysisCard(BuildContext context, DrawingAnalysis analysis) {
+  Widget _buildEnhancedAnalysisCard(
+      BuildContext context, DrawingAnalysis analysis) {
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      elevation: 2,
+      borderRadius: BorderRadius.circular(16),
+      elevation: 3,
+      shadowColor: Colors.black.withOpacity(0.1),
       child: InkWell(
         onTap: () {
-          // Navigate to analysis details
+          // Navigate to proper analysis results page
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AnalysisResultsPage(
+                analysisId: analysis.id,
+              ),
+            ),
+          );
         },
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Drawing thumbnail
-              _buildThumbnail(analysis),
-              const SizedBox(width: 16),
-
-              // Analysis info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+              // Header row with type and status
+              Row(
+                children: [
+                  _buildTypeIcon(analysis.testType),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Text(
-                            analysis.testType.displayName,
-                            style: GoogleFonts.nunito(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF2D3748),
-                            ),
+                        Text(
+                          analysis.testType.displayName,
+                          style: GoogleFonts.nunito(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF2D3748),
                           ),
                         ),
-                        _buildStatusBadge(analysis.status),
+                        const SizedBox(height: 2),
+                        Text(
+                          _formatDate(analysis.uploadDate),
+                          style: GoogleFonts.nunito(
+                            fontSize: 12,
+                            color: const Color(0xFF718096),
+                          ),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                  ),
+                  _buildStatusBadge(analysis.status),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // Content based on status
+              if (analysis.status == AnalysisStatus.completed) ...[
+                // Thumbnail and insight
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildThumbnail(analysis),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Ana Değerlendirme',
+                            style: GoogleFonts.nunito(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF667EEA),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            analysis.primaryInsight,
+                            style: GoogleFonts.nunito(
+                              fontSize: 14,
+                              color: const Color(0xFF4A5568),
+                              height: 1.4,
+                            ),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // Scores section
+                _buildScoresSection(analysis),
+
+                const SizedBox(height: 16),
+
+                // Key findings
+                if (analysis.keyFindings.isNotEmpty) ...[
+                  Text(
+                    'Önemli Bulgular',
+                    style: GoogleFonts.nunito(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF667EEA),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ...analysis.keyFindings.take(3).map(
+                        (finding) => Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 4,
+                                height: 4,
+                                margin: const EdgeInsets.only(top: 6, right: 8),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF48BB78),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  finding,
+                                  style: GoogleFonts.nunito(
+                                    fontSize: 12,
+                                    color: const Color(0xFF4A5568),
+                                    height: 1.3,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                ],
+              ] else if (analysis.status == AnalysisStatus.processing) ...[
+                // Processing state
+                Row(
+                  children: [
+                    _buildThumbnail(analysis),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Analiz Devam Ediyor',
+                            style: GoogleFonts.nunito(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF92400E),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Yapay zeka çiziminizi detaylı şekilde inceliyor...',
+                            style: GoogleFonts.nunito(
+                              fontSize: 12,
+                              color: const Color(0xFF718096),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          LinearProgressIndicator(
+                            backgroundColor: Colors.grey.shade200,
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                                Color(0xFF92400E)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ] else ...[
+                // Other states (pending, failed)
+                Row(
+                  children: [
+                    _buildThumbnail(analysis),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        _getStatusMessage(analysis.status),
+                        style: GoogleFonts.nunito(
+                          fontSize: 14,
+                          color: const Color(0xFF718096),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+
+              const SizedBox(height: 12),
+
+              // Action row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (analysis.status == AnalysisStatus.completed) ...[
                     Text(
-                      _formatDate(analysis.uploadDate),
+                      'Detayları Gör',
+                      style: GoogleFonts.nunito(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF667EEA),
+                      ),
+                    ),
+                  ] else ...[
+                    Text(
+                      analysis.status.displayName,
                       style: GoogleFonts.nunito(
                         fontSize: 12,
                         color: const Color(0xFF718096),
                       ),
                     ),
-                    if (analysis.status == AnalysisStatus.completed) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        analysis.primaryInsight,
-                        style: GoogleFonts.nunito(
-                          fontSize: 12,
-                          color: const Color(0xFF4A5568),
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
                   ],
-                ),
-              ),
-
-              // Arrow icon
-              const Icon(
-                Icons.chevron_right,
-                color: Color(0xFF718096),
-                size: 20,
+                  const Icon(
+                    Icons.chevron_right,
+                    color: Color(0xFF718096),
+                    size: 20,
+                  ),
+                ],
               ),
             ],
           ),
@@ -104,7 +277,218 @@ class RecentAnalysesSection extends StatelessWidget {
     );
   }
 
+  Widget _buildTypeIcon(DrawingTestType type) {
+    IconData icon;
+    Color color;
+
+    switch (type) {
+      case DrawingTestType.familyDrawing:
+        icon = Icons.family_restroom;
+        color = const Color(0xFF667EEA);
+        break;
+      case DrawingTestType.selfPortrait:
+        icon = Icons.person;
+        color = const Color(0xFF48BB78);
+        break;
+      case DrawingTestType.houseTreePerson:
+        icon = Icons.home;
+        color = const Color(0xFFED8936);
+        break;
+      case DrawingTestType.narrativeDrawing:
+        icon = Icons.auto_stories;
+        color = const Color(0xFF9F7AEA);
+        break;
+      case DrawingTestType.emotionalStates:
+        icon = Icons.psychology;
+        color = const Color(0xFFECC94B);
+        break;
+    }
+
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(
+        icon,
+        color: color,
+        size: 20,
+      ),
+    );
+  }
+
+  Widget _buildScoresSection(DrawingAnalysis analysis) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildScoreItem(
+              'Duygusal',
+              analysis.emotionalScore,
+              const Color(0xFF48BB78),
+            ),
+          ),
+          Container(
+            width: 1,
+            height: 30,
+            color: const Color(0xFFE2E8F0),
+            margin: const EdgeInsets.symmetric(horizontal: 8),
+          ),
+          Expanded(
+            child: _buildScoreItem(
+              'Yaratıcılık',
+              analysis.creativityScore,
+              const Color(0xFF667EEA),
+            ),
+          ),
+          Container(
+            width: 1,
+            height: 30,
+            color: const Color(0xFFE2E8F0),
+            margin: const EdgeInsets.symmetric(horizontal: 8),
+          ),
+          Expanded(
+            child: _buildScoreItem(
+              'Gelişim',
+              analysis.developmentScore,
+              const Color(0xFFED8936),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScoreItem(String label, int score, Color color) {
+    return Column(
+      children: [
+        Text(
+          score.toString(),
+          style: GoogleFonts.nunito(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: GoogleFonts.nunito(
+            fontSize: 10,
+            color: const Color(0xFF718096),
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildShowAllButton(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      elevation: 1,
+      child: InkWell(
+        onTap: () {
+          // Navigate to all analyses page - for now show a list
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => Scaffold(
+                appBar: AppBar(
+                  title: Text('Tüm Analizler'),
+                  backgroundColor: Colors.white,
+                  foregroundColor: Color(0xFF2D3748),
+                ),
+                body: ListView.builder(
+                  padding: EdgeInsets.all(16),
+                  itemCount: analyses.length,
+                  itemBuilder: (context, index) {
+                    final analysis = analyses[index];
+                    return Card(
+                      margin: EdgeInsets.only(bottom: 12),
+                      child: ListTile(
+                        title: Text(analysis.testType.displayName),
+                        subtitle: Text(
+                            '${_formatDate(analysis.uploadDate)} - ${analysis.status.displayName}'),
+                        leading: Icon(Icons.analytics),
+                        trailing: Icon(Icons.chevron_right),
+                        onTap: () {
+                          Navigator.pop(context);
+                          // Navigate to specific analysis...
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Tüm Analizleri Gör (${analyses.length})',
+                style: GoogleFonts.nunito(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF667EEA),
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(
+                Icons.arrow_forward,
+                color: Color(0xFF667EEA),
+                size: 16,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getStatusMessage(AnalysisStatus status) {
+    switch (status) {
+      case AnalysisStatus.pending:
+        return 'Analiz sıraya alındı, yakında başlayacak';
+      case AnalysisStatus.processing:
+        return 'Yapay zeka çiziminizi analiz ediyor...';
+      case AnalysisStatus.failed:
+        return 'Analiz başarısız oldu, lütfen tekrar deneyin';
+      case AnalysisStatus.completed:
+        return 'Analiz tamamlandı';
+    }
+  }
+
   Widget _buildThumbnail(DrawingAnalysis analysis) {
+    // Check if URL is a valid Firebase Storage URL
+    final isValidUrl = analysis.imageUrl.isNotEmpty &&
+        (analysis.imageUrl.startsWith('https://') ||
+            analysis.imageUrl.startsWith('http://')) &&
+        !analysis.imageUrl.startsWith('mock_');
+
+    // Check if it's a mock image that we should handle specially
+    final isMockImage = analysis.imageUrl.startsWith('mock_image_');
+
+    // For mock images, try to load from assets
+    final assetImagePath = isMockImage
+        ? 'assets/images/${analysis.imageUrl.replaceAll('mock_', '')}.jpg'
+        : null;
+
     return Container(
       width: 60,
       height: 60,
@@ -118,27 +502,70 @@ class RecentAnalysesSection extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: CachedNetworkImage(
-          imageUrl: analysis.imageUrl,
-          fit: BoxFit.cover,
-          placeholder: (context, url) => _buildThumbnailPlaceholder(),
-          errorWidget: (context, url, error) => _buildThumbnailPlaceholder(),
-        ),
+        child: isValidUrl
+            ? CachedNetworkImage(
+                imageUrl: analysis.imageUrl,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => _buildThumbnailPlaceholder(),
+                errorWidget: (context, url, error) {
+                  debugPrint('❌ Error loading image: $error');
+                  return _buildThumbnailPlaceholder();
+                },
+              )
+            : isMockImage && assetImagePath != null
+                ? Image.asset(
+                    assetImagePath,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return _buildThumbnailPlaceholder(
+                          showMockIcon: true, testType: analysis.testType);
+                    },
+                  )
+                : _buildThumbnailPlaceholder(
+                    showMockIcon: true, testType: analysis.testType),
       ),
     );
   }
 
-  Widget _buildThumbnailPlaceholder() {
+  Widget _buildThumbnailPlaceholder(
+      {bool showMockIcon = false, DrawingTestType? testType}) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF7FAFC),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF667EEA).withOpacity(0.1),
+            const Color(0xFF764BA2).withOpacity(0.1),
+          ],
+        ),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: const Icon(
-        Icons.image_outlined,
-        color: Color(0xFF718096),
-        size: 24,
-      ),
+      child: showMockIcon
+          ? Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  _getTestTypeIcon(testType),
+                  color: _getTestTypeColor(testType),
+                  size: 20,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Çizim',
+                  style: GoogleFonts.nunito(
+                    fontSize: 8,
+                    color: _getTestTypeColor(testType),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            )
+          : const Icon(
+              Icons.image_outlined,
+              color: Color(0xFF718096),
+              size: 24,
+            ),
     );
   }
 
@@ -196,6 +623,40 @@ class RecentAnalysesSection extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  IconData _getTestTypeIcon(DrawingTestType? type) {
+    if (type == null) return Icons.palette_outlined;
+
+    switch (type) {
+      case DrawingTestType.familyDrawing:
+        return Icons.family_restroom;
+      case DrawingTestType.selfPortrait:
+        return Icons.person;
+      case DrawingTestType.houseTreePerson:
+        return Icons.home;
+      case DrawingTestType.narrativeDrawing:
+        return Icons.auto_stories;
+      case DrawingTestType.emotionalStates:
+        return Icons.psychology;
+    }
+  }
+
+  Color _getTestTypeColor(DrawingTestType? type) {
+    if (type == null) return const Color(0xFF667EEA);
+
+    switch (type) {
+      case DrawingTestType.familyDrawing:
+        return const Color(0xFF667EEA);
+      case DrawingTestType.selfPortrait:
+        return const Color(0xFF48BB78);
+      case DrawingTestType.houseTreePerson:
+        return const Color(0xFFED8936);
+      case DrawingTestType.narrativeDrawing:
+        return const Color(0xFF9F7AEA);
+      case DrawingTestType.emotionalStates:
+        return const Color(0xFFECC94B);
+    }
   }
 
   String _formatDate(DateTime date) {

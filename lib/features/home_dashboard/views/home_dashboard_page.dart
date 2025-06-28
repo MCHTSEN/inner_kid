@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:inner_kid/core/models/drawing_analysis.dart';
-import 'package:inner_kid/features/home_dashboard/widgets/daily_insight_card.dart';
-import 'package:inner_kid/features/home_dashboard/widgets/quick_analysis_section.dart';
-import 'package:inner_kid/features/home_dashboard/widgets/recent_analyses_section.dart';
-import 'package:inner_kid/features/home_dashboard/widgets/daily_recommendations.dart';
 import 'package:inner_kid/features/home_dashboard/providers/home_dashboard_provider.dart';
+import 'package:inner_kid/features/home_dashboard/widgets/child_selector_menu.dart';
+import 'package:inner_kid/features/home_dashboard/widgets/daily_insight_card.dart';
+import 'package:inner_kid/features/home_dashboard/widgets/daily_recommendations.dart';
+import 'package:inner_kid/features/home_dashboard/widgets/recent_analyses_section.dart';
 
 class HomeDashboardPage extends ConsumerWidget {
   const HomeDashboardPage({super.key});
@@ -40,23 +40,19 @@ class HomeDashboardPage extends ConsumerWidget {
         ),
       ),
       actions: [
-        IconButton(
-          onPressed: () {
-            // Navigate to profile
+        ChildSelectorMenu(
+          onChildSelected: (selectedChild) {
+            if (selectedChild != null) {
+              // Handle child selection
+              if (selectedChild['name'] == 'Çocuk Ekle') {
+                // Navigate to add child page
+                debugPrint('Navigate to add child');
+              } else {
+                // Child selected
+                debugPrint('Selected child: ${selectedChild['name']}');
+              }
+            }
           },
-          icon: Container(
-            width: 36,
-            height: 36,
-            decoration: const BoxDecoration(
-              color: Color(0xFF667EEA),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.person,
-              color: Colors.white,
-              size: 20,
-            ),
-          ),
         ),
         IconButton(
           onPressed: () {
@@ -86,22 +82,40 @@ class HomeDashboardPage extends ConsumerWidget {
             // Daily Insight Card
             DailyInsightCard(
               insight: data.dailyInsight,
+              recentAnalyses: data.recentAnalyses,
             ).animate().fadeIn(duration: 300.ms).slideX(begin: -0.2),
-
-            const SizedBox(height: 24),
-
-            // Quick Analysis Section
-            _buildSectionHeader('Hızlı Analiz'),
-            const SizedBox(height: 12),
-            const QuickAnalysisSection(),
 
             const SizedBox(height: 24),
 
             // Recent Analyses
             if (data.recentAnalyses.isNotEmpty) ...[
-              _buildSectionHeader('Son Analizler'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildSectionHeader('Analizlerin'),
+                  TextButton(
+                    onPressed: () {
+                      // Navigate to all analyses page
+                      // Navigator.pushNamed(context, '/all-analyses');
+                    },
+                    child: Text(
+                      'Tümünü Gör',
+                      style: GoogleFonts.nunito(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF667EEA),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 12),
               RecentAnalysesSection(analyses: data.recentAnalyses),
+              const SizedBox(height: 24),
+            ] else ...[
+              _buildSectionHeader('Geçmiş Analizler'),
+              const SizedBox(height: 12),
+              _buildEmptyAnalysesState(),
               const SizedBox(height: 24),
             ],
 
@@ -200,6 +214,54 @@ class HomeDashboardPage extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildEmptyAnalysesState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: const Color(0xFF667EEA).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(40),
+            ),
+            child: const Icon(
+              Icons.analytics_outlined,
+              size: 40,
+              color: Color(0xFF667EEA),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Henüz Analiz Yok',
+            style: GoogleFonts.nunito(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF2D3748),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Çocuğunuzun ilk çizimini analiz etmek için\nana sayfadaki "Analiz Et" butonunu kullanın',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.nunito(
+              fontSize: 14,
+              color: const Color(0xFF718096),
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(delay: 300.ms);
   }
 }
 

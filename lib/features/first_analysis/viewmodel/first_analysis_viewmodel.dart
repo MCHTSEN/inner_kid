@@ -1,16 +1,34 @@
 import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import '../models/first_analysis_state.dart';
+import 'package:inner_kid/core/services/firestore_service.dart';
+import 'package:inner_kid/core/services/storage_service.dart';
+import 'package:inner_kid/features/auth/viewmodels/auth_viewmodel.dart';
+import 'package:uuid/uuid.dart';
+
 import '../models/analysis_question.dart';
+import '../models/first_analysis_state.dart';
 
 /// ViewModel for managing the first analysis feature state
 class FirstAnalysisViewModel extends StateNotifier<FirstAnalysisState> {
-  FirstAnalysisViewModel() : super(const FirstAnalysisState()) {
+  final StorageService _storageService;
+  final FirestoreService _firestoreService;
+  final Ref _ref;
+
+  FirstAnalysisViewModel({
+    required StorageService storageService,
+    required FirestoreService firestoreService,
+    required Ref ref,
+  })  : _storageService = storageService,
+        _firestoreService = firestoreService,
+        _ref = ref,
+        super(const FirstAnalysisState()) {
     _initializeQuestions();
   }
 
   final ImagePicker _picker = ImagePicker();
+  final Uuid _uuid = const Uuid();
 
   /// Initialize predefined questions
   void _initializeQuestions() {
@@ -124,7 +142,7 @@ class FirstAnalysisViewModel extends StateNotifier<FirstAnalysisState> {
     _initializeQuestions();
   }
 
-  /// Submit the analysis
+  /// Submit the analysis with Firebase Storage integration
   Future<void> submitAnalysis() async {
     if (!state.allQuestionsAnswered || state.uploadedImage == null) {
       return;
@@ -138,12 +156,38 @@ class FirstAnalysisViewModel extends StateNotifier<FirstAnalysisState> {
         isCompleted: true,
       );
 
-      // TODO: API CALL
+      // Get authenticated user
+      final authState = _ref.read(authViewModelProvider);
+      if (!authState.isAuthenticated || authState.userProfile == null) {
+        throw Exception('User must be authenticated');
+      }
 
-      // Analysis completed
+      final userId = authState.firebaseUser!.uid;
+      final drawingId = _uuid.v4();
+      final childId = 'default_child'; // TODO: Get from selected child
+
+      // Upload image to Firebase Storage
+      final imageUrl = await _storageService.uploadDrawing(
+        imageFile: state.uploadedImage!,
+        userId: userId,
+        childId: childId,
+        drawingId: drawingId,
+      );
+
+      // Create analysis record in Firestore (placeholder)
+      // TODO: Create proper drawing analysis model and save to Firestore
+
+      // For now, just mark as completed
       state = state.copyWith(
         isAnalyzing: false,
         isAnalysisCompleted: true,
+        analysisResults: {
+          'drawingId': drawingId,
+          'imageUrl': imageUrl,
+          'answers': Map.fromEntries(
+            state.questions.map((q) => MapEntry(q.id, q.selectedAnswer ?? '')),
+          ),
+        },
       );
     } catch (e) {
       state = state.copyWith(
@@ -151,6 +195,7 @@ class FirstAnalysisViewModel extends StateNotifier<FirstAnalysisState> {
         isLoading: false,
       );
       // Handle error
+      rethrow;
     }
   }
 
@@ -168,5 +213,15 @@ class FirstAnalysisViewModel extends StateNotifier<FirstAnalysisState> {
 /// Provider for the FirstAnalysisViewModel
 final firstAnalysisViewModelProvider =
     StateNotifierProvider<FirstAnalysisViewModel, FirstAnalysisState>(
-  (ref) => FirstAnalysisViewModel(),
+  (ref) => FirstAnalysisViewModel(
+    storageService: ref.watch(storageServiceProvider),
+    firestoreService: ref.watch(firestoreServiceProvider),
+    ref: ref,
+  ),
 );
+
+// Import providers from auth viewmodel
+final storageServiceProvider =
+    Provider<StorageService>((ref) => StorageService());
+final firestoreServiceProvider =
+    Provider<FirestoreService>((ref) => FirestoreService());

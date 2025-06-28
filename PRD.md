@@ -267,11 +267,11 @@ profiles/{userId}/{childId}/avatar.jpg
 - [ ] Basit çizim analizi (mock data)
 
 ### Faz 2: AI Entegrasyonu (6-8 hafta)
-- [ ] Google Vision API entegrasyonu
-- [ ] Çizim analizi ML modelinin geliştirilmesi
+- [ ] Gemini API entegrasyonu
+- [ ] Gemini Response Format entegrasyonu
 - [ ] Psikolojik analiz algoritmaları
 - [ ] Gerçek zamanlı analiz sistemi
-- [ ] Sonuç raporlama sistemi
+- [ ] Sonuç raporlama sistemi (PDF)
 
 ### Faz 3: Gelişmiş Özellikler (4-6 hafta)
 - [ ] Çoklu çocuk profili desteği

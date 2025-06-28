@@ -9,6 +9,7 @@ import 'package:inner_kid/features/first_analysis/first_analysis_page.dart';
 import 'package:inner_kid/features/landing/components/analysis_card.dart';
 import 'package:inner_kid/widgets/action_menu.dart';
 import 'package:lottie/lottie.dart';
+import '../auth/views/login_page.dart';
 
 class LandingPage extends ConsumerStatefulWidget {
   const LandingPage({super.key});
@@ -317,6 +318,37 @@ class _LandingPageState extends ConsumerState<LandingPage>
                       ),
                       const SizedBox(width: 8),
                       const Icon(Icons.arrow_forward, size: 18),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Login button for existing users
+                OutlinedButton(
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/login');
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 16,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.login, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Giriş Yap',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
                   ),
                 ),

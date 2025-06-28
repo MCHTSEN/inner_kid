@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../../../core/models/drawing_analysis.dart';
 
 class DailyInsightCard extends StatelessWidget {
   final String insight;
+  final List<DrawingAnalysis> recentAnalyses;
 
   const DailyInsightCard({
     super.key,
     required this.insight,
+    required this.recentAnalyses,
   });
 
   @override
   Widget build(BuildContext context) {
+    final metrics = _calculateMetrics();
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -92,13 +98,44 @@ class DailyInsightCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
+
+          // Analysis summary
+          if (recentAnalyses.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.analytics_outlined,
+                    color: Colors.white.withOpacity(0.8),
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${recentAnalyses.length} analiz • ${_getCompletedCount()} tamamlandı',
+                    style: GoogleFonts.nunito(
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+
           Row(
             children: [
               Expanded(
                 child: _buildMetricItem(
                   icon: Icons.emoji_emotions,
                   label: 'Duygusal',
-                  value: '8.5',
+                  value: metrics['emotional']!,
+                  trend: _getTrend('emotional'),
                 ),
               ),
               const SizedBox(width: 16),
@@ -106,7 +143,8 @@ class DailyInsightCard extends StatelessWidget {
                 child: _buildMetricItem(
                   icon: Icons.palette,
                   label: 'Yaratıcılık',
-                  value: '9.2',
+                  value: metrics['creativity']!,
+                  trend: _getTrend('creativity'),
                 ),
               ),
               const SizedBox(width: 16),
@@ -114,7 +152,8 @@ class DailyInsightCard extends StatelessWidget {
                 child: _buildMetricItem(
                   icon: Icons.trending_up,
                   label: 'Gelişim',
-                  value: '7.8',
+                  value: metrics['development']!,
+                  trend: _getTrend('development'),
                 ),
               ),
             ],
@@ -124,10 +163,80 @@ class DailyInsightCard extends StatelessWidget {
     ).animate().slideY(begin: -0.1, duration: 400.ms).fadeIn(duration: 400.ms);
   }
 
+  Map<String, String> _calculateMetrics() {
+    final completedAnalyses = recentAnalyses
+        .where((a) => a.status == AnalysisStatus.completed)
+        .toList();
+
+    if (completedAnalyses.isEmpty) {
+      return {
+        'emotional': '--',
+        'creativity': '--',
+        'development': '--',
+      };
+    }
+
+    final avgEmotional =
+        completedAnalyses.map((a) => a.emotionalScore).reduce((a, b) => a + b) /
+            completedAnalyses.length;
+
+    final avgCreativity = completedAnalyses
+            .map((a) => a.creativityScore)
+            .reduce((a, b) => a + b) /
+        completedAnalyses.length;
+
+    final avgDevelopment = completedAnalyses
+            .map((a) => a.developmentScore)
+            .reduce((a, b) => a + b) /
+        completedAnalyses.length;
+
+    return {
+      'emotional': (avgEmotional / 10).toStringAsFixed(1),
+      'creativity': (avgCreativity / 10).toStringAsFixed(1),
+      'development': (avgDevelopment / 10).toStringAsFixed(1),
+    };
+  }
+
+  int _getCompletedCount() {
+    return recentAnalyses
+        .where((a) => a.status == AnalysisStatus.completed)
+        .length;
+  }
+
+  String _getTrend(String metric) {
+    final completedAnalyses = recentAnalyses
+        .where((a) => a.status == AnalysisStatus.completed)
+        .toList();
+
+    if (completedAnalyses.length < 2) return '';
+
+    // Get recent and older scores
+    final recentScore = _getScoreByMetric(completedAnalyses.first, metric);
+    final olderScore = _getScoreByMetric(completedAnalyses.last, metric);
+
+    if (recentScore > olderScore) return '↗';
+    if (recentScore < olderScore) return '↘';
+    return '→';
+  }
+
+  int _getScoreByMetric(DrawingAnalysis analysis, String metric) {
+    switch (metric) {
+      case 'emotional':
+        return analysis.emotionalScore;
+      case 'creativity':
+        return analysis.creativityScore;
+      case 'development':
+        return analysis.developmentScore;
+      default:
+        return 0;
+    }
+  }
+
   Widget _buildMetricItem({
     required IconData icon,
     required String label,
     required String value,
+    required String trend,
   }) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -143,13 +252,28 @@ class DailyInsightCard extends StatelessWidget {
             size: 16,
           ),
           const SizedBox(height: 4),
-          Text(
-            value,
-            style: GoogleFonts.nunito(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                value,
+                style: GoogleFonts.nunito(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              if (trend.isNotEmpty) ...[
+                const SizedBox(width: 2),
+                Text(
+                  trend,
+                  style: GoogleFonts.nunito(
+                    fontSize: 10,
+                    color: Colors.white.withOpacity(0.8),
+                  ),
+                ),
+              ],
+            ],
           ),
           Text(
             label,

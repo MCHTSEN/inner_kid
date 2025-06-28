@@ -1,7 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
-class FloatingBottomNav extends StatelessWidget {
+import '../../features/analysis_flow/viewmodels/analysis_viewmodel.dart';
+import '../../features/analysis_flow/views/analysis_waiting_page.dart';
+
+class FloatingBottomNav extends ConsumerWidget {
   final int currentIndex;
   final Function(int) onTap;
 
@@ -12,7 +19,7 @@ class FloatingBottomNav extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Positioned(
       left: 16,
       right: 16,
@@ -46,7 +53,7 @@ class FloatingBottomNav extends StatelessWidget {
               index: 1,
               isActive: currentIndex == 1,
             ),
-            _buildAnalyzeButton(context),
+            _buildAnalyzeButton(context, ref),
             _buildNavItem(
               context,
               icon: Icons.quiz_outlined,
@@ -56,8 +63,8 @@ class FloatingBottomNav extends StatelessWidget {
             ),
             _buildNavItem(
               context,
-              icon: Icons.lightbulb_outline,
-              label: 'Öneriler',
+              icon: Icons.home_outlined,
+              label: 'Anasayfa',
               index: 4,
               isActive: currentIndex == 4,
             ),
@@ -65,6 +72,48 @@ class FloatingBottomNav extends StatelessWidget {
         ),
       ),
     ).animate().slideY(begin: 1, duration: 600.ms, curve: Curves.easeOutBack);
+  }
+
+  /// Handle analyze button press - show image picker and start analysis
+  void _onAnalyzeButtonPressed(BuildContext context, WidgetRef ref) async {
+    try {
+      // Show image picker
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 2048,
+        maxHeight: 2048,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        // Convert XFile to File
+        final File imageFile = File(image.path);
+
+        // Navigate to analysis waiting page
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const AnalysisWaitingPage(),
+          ),
+        );
+
+        // Start analysis
+        await ref.read(analysisViewModelProvider.notifier).startAnalysis(
+          imageFile: imageFile,
+          questionnaire: {
+            'source': 'floating_nav',
+            'timestamp': DateTime.now().toIso8601String(),
+          },
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Görsel seçilirken hata oluştu: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Widget _buildNavItem(
@@ -113,13 +162,13 @@ class FloatingBottomNav extends StatelessWidget {
     );
   }
 
-  Widget _buildAnalyzeButton(BuildContext context) {
+  Widget _buildAnalyzeButton(BuildContext context, WidgetRef ref) {
     return Container(
       width: 80,
       height: 80,
       margin: const EdgeInsets.symmetric(horizontal: 8),
       child: GestureDetector(
-        onTap: () => onTap(2),
+        onTap: () => _onAnalyzeButtonPressed(context, ref),
         child: Container(
           decoration: BoxDecoration(
             gradient: const LinearGradient(
