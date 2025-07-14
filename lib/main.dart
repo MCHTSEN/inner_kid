@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:inner_kid/core/navigation/main_navigation.dart';
+import 'package:inner_kid/widgets/apple_lock_button.dart';
 
 import 'features/auth/views/login_page.dart';
 import 'features/landing/landing_page.dart';
@@ -59,13 +60,27 @@ class InnerKidApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const SplashPage(),
+      home: const MyWidget(),
       routes: {
         '/splash': (context) => const SplashPage(),
         '/landing': (context) => const LandingPage(),
         '/login': (context) => const LoginPage(),
         '/main': (context) => const MainNavigation(),
       },
+    );
+  }
+}
+
+class MyWidget extends StatelessWidget {
+  const MyWidget({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(
+        child: AppleLockButton(
+          child: Center(child: Text('Hello')),
+        ),
+      ),
     );
   }
 }
