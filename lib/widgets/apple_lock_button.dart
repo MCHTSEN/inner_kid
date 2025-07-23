@@ -10,14 +10,14 @@ class AppleLockButton extends StatefulWidget {
   final Color pressedColor;
 
   const AppleLockButton({
-    Key? key,
+    super.key,
     this.onLongPress,
     this.onLongPressEnd,
     required this.child,
     this.size = 60.0,
     this.normalColor = Colors.grey,
     this.pressedColor = Colors.white,
-  }) : super(key: key);
+  });
 
   @override
   State<AppleLockButton> createState() => _AppleLockButtonState();
@@ -30,7 +30,7 @@ class _AppleLockButtonState extends State<AppleLockButton>
   late Animation<double> _scaleAnimation;
   late Animation<double> _bounceAnimation;
   late Animation<Color?> _colorAnimation;
-  
+
   bool _isPressed = false;
   bool _isLongPressed = false;
   static const Duration _longPressThreshold = Duration(milliseconds: 500);
@@ -38,19 +38,19 @@ class _AppleLockButtonState extends State<AppleLockButton>
   @override
   void initState() {
     super.initState();
-    
+
     // Main scale controller for the initial scale up
     _scaleController = AnimationController(
       duration: const Duration(milliseconds: 150),
       vsync: this,
     );
-    
+
     // Bounce controller for the debounce effect
     _bounceController = AnimationController(
       duration: const Duration(milliseconds: 400),
       vsync: this,
     );
-    
+
     // Scale animation from 1.0 to 1.1 (initial press), then to 1.5 (long press)
     _scaleAnimation = Tween<double>(
       begin: 1.0,
@@ -59,7 +59,7 @@ class _AppleLockButtonState extends State<AppleLockButton>
       parent: _scaleController,
       curve: Curves.easeOut,
     ));
-    
+
     // Bounce animation from 1.5 to 1.3 and back to 1.5 (smooth single bounce)
     _bounceAnimation = Tween<double>(
       begin: 1.5,
@@ -68,7 +68,7 @@ class _AppleLockButtonState extends State<AppleLockButton>
       parent: _bounceController,
       curve: Curves.easeInOut,
     ));
-    
+
     // Color animation - only active during long press
     _colorAnimation = ColorTween(
       begin: widget.normalColor,
@@ -90,10 +90,10 @@ class _AppleLockButtonState extends State<AppleLockButton>
     setState(() {
       _isPressed = true;
     });
-    
+
     // Immediate scale up to 1.1x
     _scaleController.forward();
-    
+
     // Start timer for long press detection
     Future.delayed(_longPressThreshold, () {
       if (_isPressed) {
@@ -114,10 +114,10 @@ class _AppleLockButtonState extends State<AppleLockButton>
     setState(() {
       _isLongPressed = true;
     });
-    
+
     // Trigger haptic feedback
     HapticFeedback.mediumImpact();
-    
+
     // Scale up to 1.5x and change color
     _scaleAnimation = Tween<double>(
       begin: 1.1,
@@ -126,14 +126,14 @@ class _AppleLockButtonState extends State<AppleLockButton>
       parent: _scaleController,
       curve: Curves.easeOut,
     ));
-    
+
     _scaleController.reset();
     _scaleController.forward().then((_) {
       if (_isLongPressed) {
         _startBounceAnimation();
       }
     });
-    
+
     // Call the callback
     widget.onLongPress?.call();
   }
@@ -152,11 +152,11 @@ class _AppleLockButtonState extends State<AppleLockButton>
       _isPressed = false;
       _isLongPressed = false;
     });
-    
+
     // Stop bounce animation and reset to normal state
     _bounceController.stop();
     _bounceController.reset();
-    
+
     // Reset scale animation to normal
     _scaleAnimation = Tween<double>(
       begin: 1.0,
@@ -165,9 +165,9 @@ class _AppleLockButtonState extends State<AppleLockButton>
       parent: _scaleController,
       curve: Curves.easeOut,
     ));
-    
+
     _scaleController.reverse();
-    
+
     // Call the callback if it was a long press
     if (_isLongPressed) {
       widget.onLongPressEnd?.call();
@@ -181,16 +181,20 @@ class _AppleLockButtonState extends State<AppleLockButton>
       onTapUp: _onTapUp,
       onTapCancel: _onTapCancel,
       child: AnimatedBuilder(
-        animation: Listenable.merge([_scaleAnimation, _bounceAnimation, _colorAnimation]),
+        animation: Listenable.merge(
+            [_scaleAnimation, _bounceAnimation, _colorAnimation]),
         builder: (context, child) {
           double currentScale = _scaleAnimation.value;
-          Color currentColor = _isLongPressed ? _colorAnimation.value! : widget.normalColor;
-          
+          Color currentColor =
+              _isLongPressed ? _colorAnimation.value! : widget.normalColor;
+
           // Apply bounce effect when bounce animation is active during long press
-          if (_isLongPressed && (_bounceController.isAnimating || _bounceController.isCompleted)) {
+          if (_isLongPressed &&
+              (_bounceController.isAnimating ||
+                  _bounceController.isCompleted)) {
             currentScale = _bounceAnimation.value;
           }
-          
+
           return Transform.scale(
             scale: currentScale,
             child: Container(

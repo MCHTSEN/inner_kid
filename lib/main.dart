@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:inner_kid/core/helper/keyboard_unfocus.dart';
 import 'package:inner_kid/core/navigation/main_navigation.dart';
 import 'package:inner_kid/widgets/apple_lock_button.dart';
 
@@ -35,51 +36,39 @@ class InnerKidApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Inner Kid',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.purple,
-        primaryColor: const Color.fromARGB(255, 135, 234, 102),
-        scaffoldBackgroundColor: const Color(0xFFF8F9FA),
-        fontFamily: GoogleFonts.nunito().fontFamily,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          foregroundColor: Color(0xFF2D3748),
-          elevation: 0,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF667EEA),
-            foregroundColor: Colors.white,
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+    return KeyboardDismissOnTap(
+      child: MaterialApp(
+        title: 'Inner Kid',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primarySwatch: Colors.purple,
+          primaryColor: const Color.fromARGB(255, 135, 234, 102),
+          scaffoldBackgroundColor: const Color(0xFFF8F9FA),
+          fontFamily: GoogleFonts.nunito().fontFamily,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.white,
+            foregroundColor: Color(0xFF2D3748),
+            elevation: 0,
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF667EEA),
+              foregroundColor: Colors.white,
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
         ),
-      ),
-      home: const MyWidget(),
-      routes: {
-        '/splash': (context) => const SplashPage(),
-        '/landing': (context) => const LandingPage(),
-        '/login': (context) => const LoginPage(),
-        '/main': (context) => const MainNavigation(),
-      },
-    );
-  }
-}
-
-class MyWidget extends StatelessWidget {
-  const MyWidget({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: AppleLockButton(
-          child: Center(child: Text('Hello')),
-        ),
+        home: const SplashPage(),
+        routes: {
+          '/splash': (context) => const SplashPage(),
+          '/landing': (context) => const LandingPage(),
+          '/login': (context) => const LoginPage(),
+          '/main': (context) => const MainNavigation(),
+        },
       ),
     );
   }

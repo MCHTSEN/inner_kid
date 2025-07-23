@@ -191,6 +191,139 @@ class FirestoreService {
   }
 
   // Analysis operations
+  Stream<List<DrawingAnalysis>> getUserAnalysesStream(String userId) {
+    try {
+      _logger.i('Setting up analyses stream for user: $userId');
+
+      return _db
+          .collection(analysesCollection)
+          .where('userId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .limit(20)
+          .snapshots()
+          .map((querySnapshot) {
+        _logger.i('Stream update: Found ${querySnapshot.docs.length} documents for user: $userId');
+
+        final analyses = <DrawingAnalysis>[];
+
+        for (final doc in querySnapshot.docs) {
+          try {
+            final data = doc.data();
+            _logger.i('Processing document ${doc.id} with data keys: ${data.keys.toList()}');
+
+            // Check if required fields exist
+            if (!data.containsKey('userId') ||
+                !data.containsKey('imageUrl') ||
+                !data.containsKey('createdAt')) {
+              _logger.w('Document ${doc.id} missing required fields, skipping');
+              continue;
+            }
+
+            // Prepare data with proper null handling and defaults
+            final analysisData = {
+              'id': doc.id,
+              'childId': (data['childId'] as String?) ?? 'default_child',
+              'imageUrl': (data['imageUrl'] as String?) ?? '',
+              'uploadDate': _getDateString(data['uploadDate'] ?? data['createdAt']),
+              'testType': (data['testType'] as String?) ?? 'family_drawing',
+              'status': (data['status'] as String?) ?? 'completed',
+              'aiResults': (data['insights'] ?? data['aiResults']) as Map<String, dynamic>?,
+              'metadata': data['metadata'] as Map<String, dynamic>?,
+              'createdAt': _getDateString(data['createdAt']),
+              'completedAt': _getDateString(data['completedAt']),
+            };
+
+            final analysis = DrawingAnalysis.fromJson(analysisData);
+            analyses.add(analysis);
+            _logger.i('Successfully parsed document ${doc.id}');
+          } catch (e) {
+            _logger.e('Error parsing document ${doc.id}: $e');
+            // Continue with other documents
+          }
+        }
+
+        _logger.i('Stream update: Successfully processed ${analyses.length} analyses for user: $userId');
+        return analyses;
+      }).handleError((error) {
+        _logger.e('Error in analyses stream: $error');
+        
+        // If composite index error, fall back to client-side sorting stream
+        if (error.toString().contains('index') || error.toString().contains('requires an index')) {
+          _logger.w('Composite index not found, falling back to client-side sorting stream');
+          return _getUserAnalysesStreamWithClientSorting(userId);
+        }
+        
+        // Return empty list for other errors
+        return <DrawingAnalysis>[];
+      });
+    } catch (e) {
+      _logger.e('Error setting up analyses stream: $e');
+      // Return a stream with empty list as fallback
+      return Stream.value(<DrawingAnalysis>[]);
+    }
+  }
+
+  // Fallback stream method with client-side sorting
+  Stream<List<DrawingAnalysis>> _getUserAnalysesStreamWithClientSorting(String userId) {
+    try {
+      _logger.i('Using client-side sorting stream for user: $userId');
+
+      return _db
+          .collection(analysesCollection)
+          .where('userId', isEqualTo: userId)
+          .snapshots()
+          .map((querySnapshot) {
+        _logger.i('Client-side stream update: Found ${querySnapshot.docs.length} documents for user: $userId');
+
+        final analyses = <DrawingAnalysis>[];
+
+        for (final doc in querySnapshot.docs) {
+          try {
+            final data = doc.data();
+
+            // Check if required fields exist
+            if (!data.containsKey('userId') ||
+                !data.containsKey('imageUrl') ||
+                !data.containsKey('createdAt')) {
+              _logger.w('Document ${doc.id} missing required fields, skipping');
+              continue;
+            }
+
+            // Prepare data with proper null handling and defaults
+            final analysisData = {
+              'id': doc.id,
+              'childId': (data['childId'] as String?) ?? 'default_child',
+              'imageUrl': (data['imageUrl'] as String?) ?? '',
+              'uploadDate': _getDateString(data['uploadDate'] ?? data['createdAt']),
+              'testType': (data['testType'] as String?) ?? 'family_drawing',
+              'status': (data['status'] as String?) ?? 'completed',
+              'aiResults': (data['insights'] ?? data['aiResults']) as Map<String, dynamic>?,
+              'metadata': data['metadata'] as Map<String, dynamic>?,
+              'createdAt': _getDateString(data['createdAt']),
+              'completedAt': _getDateString(data['completedAt']),
+            };
+
+            final analysis = DrawingAnalysis.fromJson(analysisData);
+            analyses.add(analysis);
+          } catch (e) {
+            _logger.e('Error parsing document ${doc.id}: $e');
+            // Continue with other documents
+          }
+        }
+
+        // Sort client-side by createdAt descending and limit to 20
+        analyses.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        final limitedAnalyses = analyses.take(20).toList();
+
+        _logger.i('Client-side stream update: Successfully processed ${limitedAnalyses.length} analyses');
+        return limitedAnalyses;
+      });
+    } catch (e) {
+      _logger.e('Error in client-side sorting stream: $e');
+      return Stream.value(<DrawingAnalysis>[]);
+    }
+  }
+
   Future<List<DrawingAnalysis>> getUserAnalyses(String userId) async {
     try {
       _logger.i('Fetching analyses for user: $userId');

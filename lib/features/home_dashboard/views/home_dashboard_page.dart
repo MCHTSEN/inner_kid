@@ -69,67 +69,74 @@ class HomeDashboardPage extends ConsumerWidget {
   }
 
   Widget _buildDashboard(BuildContext context, DashboardData data) {
-    return RefreshIndicator(
-      onRefresh: () async {
-        // Refresh dashboard data
-      },
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Daily Insight Card
-            DailyInsightCard(
-              insight: data.dailyInsight,
-              recentAnalyses: data.recentAnalyses,
-            ).animate().fadeIn(duration: 300.ms).slideX(begin: -0.2),
+    return Consumer(
+      builder: (context, ref, child) {
+        return RefreshIndicator(
+          onRefresh: () async {
+            // Invalidate the provider to refresh the stream
+            ref.invalidate(homeDashboardProvider);
+            // Wait a bit for the stream to restart
+            await Future.delayed(const Duration(milliseconds: 500));
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Daily Insight Card
+                DailyInsightCard(
+                  insight: data.dailyInsight,
+                  recentAnalyses: data.recentAnalyses,
+                ).animate().fadeIn(duration: 300.ms).slideX(begin: -0.2),
 
-            const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-            // Recent Analyses
-            if (data.recentAnalyses.isNotEmpty) ...[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildSectionHeader('Analizlerin'),
-                  TextButton(
-                    onPressed: () {
-                      // Navigate to all analyses page
-                      // Navigator.pushNamed(context, '/all-analyses');
-                    },
-                    child: Text(
-                      'Tümünü Gör',
-                      style: GoogleFonts.nunito(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF667EEA),
+                // Recent Analyses
+                if (data.recentAnalyses.isNotEmpty) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildSectionHeader('Analizlerin'),
+                      TextButton(
+                        onPressed: () {
+                          // Navigate to all analyses page
+                          // Navigator.pushNamed(context, '/all-analyses');
+                        },
+                        child: Text(
+                          'Tümünü Gör',
+                          style: GoogleFonts.nunito(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF667EEA),
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
+                  const SizedBox(height: 12),
+                  RecentAnalysesSection(analyses: data.recentAnalyses),
+                  const SizedBox(height: 24),
+                ] else ...[
+                  _buildSectionHeader('Geçmiş Analizler'),
+                  const SizedBox(height: 12),
+                  _buildEmptyAnalysesState(),
+                  const SizedBox(height: 24),
                 ],
-              ),
-              const SizedBox(height: 12),
-              RecentAnalysesSection(analyses: data.recentAnalyses),
-              const SizedBox(height: 24),
-            ] else ...[
-              _buildSectionHeader('Geçmiş Analizler'),
-              const SizedBox(height: 12),
-              _buildEmptyAnalysesState(),
-              const SizedBox(height: 24),
-            ],
 
-            // Daily Recommendations
-            _buildSectionHeader('Günlük Öneriler'),
-            const SizedBox(height: 12),
-            DailyRecommendations(
-              recommendations: data.dailyRecommendations,
+                // Daily Recommendations
+                _buildSectionHeader('Günlük Öneriler'),
+                const SizedBox(height: 12),
+                DailyRecommendations(
+                  recommendations: data.dailyRecommendations,
+                ),
+
+                const SizedBox(height: 120), // Space for floating bottom nav
+              ],
             ),
-
-            const SizedBox(height: 120), // Space for floating bottom nav
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 

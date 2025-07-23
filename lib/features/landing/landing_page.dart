@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:inner_kid/core/helper/gap.dart';
 import 'package:inner_kid/core/theme/theme.dart';
 import 'package:inner_kid/core/constants/assets.dart';
 import 'package:inner_kid/core/constants/radius.dart';
@@ -322,43 +323,25 @@ class _LandingPageState extends ConsumerState<LandingPage>
                   ),
                 ),
 
-                const SizedBox(height: 16),
-
                 // Login button for existing users
-                OutlinedButton(
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/login');
-                  },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: const BorderSide(color: Colors.white),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 16,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.login, size: 18),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Giriş Yap',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),
 
-          const SizedBox(height: 32),
-
-          // Footer info
+          Gap.low,
+          TextButton(
+            onPressed: () {
+              Navigator.pushReplacementNamed(context, '/login');
+            },
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Zaten hesabın var mı? Giriş Yap',
+                    style: TextStyle(color: Colors.black)),
+              ],
+            ),
+          ),
+          Gap.high,
           Text(
             '© 2024 Inner Kid - Çocuk Gelişim Uzmanları',
             style: GoogleFonts.poppins(
