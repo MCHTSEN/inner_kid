@@ -5,39 +5,43 @@ import 'package:inner_kid/core/models/drawing_analysis.dart';
 import 'package:inner_kid/features/auth/viewmodels/auth_viewmodel.dart';
 import 'package:inner_kid/features/home_dashboard/views/home_dashboard_page.dart';
 
-// Real dashboard provider that fetches from Firebase
-final homeDashboardProvider = FutureProvider<DashboardData>((ref) async {
+// Real dashboard provider that listens to Firebase changes in real-time
+final homeDashboardProvider = StreamProvider<DashboardData>((ref) {
   final authState = ref.watch(authViewModelProvider);
   final firestoreService = ref.watch(firestoreServiceProvider);
 
   if (!authState.isAuthenticated || authState.userProfile == null) {
-    return _getMockDashboardData(); // Fallback to mock data
+    return Stream.value(_getMockDashboardData()); // Fallback to mock data
   }
 
   try {
     final userId = authState.firebaseUser!.uid;
 
-    // Fetch real analyses from Firebase
-    final analyses = await firestoreService.getUserAnalyses(userId);
+    // Listen to real-time analyses from Firebase
+    return firestoreService.getUserAnalysesStream(userId).map((analyses) {
+      // If no real analyses, return mock data for demonstration
+      if (analyses.isEmpty) {
+        return _getMockDashboardData();
+      }
 
-    // If no real analyses, return mock data for demonstration
-    if (analyses.isEmpty) {
+      // Generate dynamic insights based on real data
+      final dailyInsight = _generateDailyInsight(analyses);
+      final recommendations = _generateRecommendations(analyses);
+
+      return DashboardData(
+        dailyInsight: dailyInsight,
+        recentAnalyses: analyses, // Use real analyses
+        dailyRecommendations: recommendations,
+      );
+    }).handleError((error) {
+      // Log error and fallback to mock data
+      debugPrint('❌ Error in dashboard stream: $error');
       return _getMockDashboardData();
-    }
-
-    // Generate dynamic insights based on real data
-    final dailyInsight = _generateDailyInsight(analyses);
-    final recommendations = _generateRecommendations(analyses);
-
-    return DashboardData(
-      dailyInsight: dailyInsight,
-      recentAnalyses: analyses, // Use real analyses
-      dailyRecommendations: recommendations,
-    );
+    });
   } catch (e) {
     // Log error and fallback to mock data
-    debugPrint('❌ Error fetching dashboard data: $e');
-    return _getMockDashboardData();
+    debugPrint('❌ Error setting up dashboard stream: $e');
+    return Stream.value(_getMockDashboardData());
   }
 });
 

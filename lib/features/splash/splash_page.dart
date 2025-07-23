@@ -264,4 +264,3 @@ final firstTimeUserProvider = FutureProvider<bool>((ref) async {
   final prefs = await SharedPreferences.getInstance();
   return prefs.getBool(_SplashPageState._firstTimeKey) ?? true;
 });
- 
