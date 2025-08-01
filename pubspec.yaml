@@ -68,6 +68,11 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
+  fonts:
+    - family: Gacor
+      fonts:
+        - asset: assets/fonts/Gacor.ttf
+
   assets:
     - assets/
     - assets/images/

@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:inner_kid/core/helper/keyboard_unfocus.dart';
 import 'package:inner_kid/core/navigation/main_navigation.dart';
-import 'package:inner_kid/widgets/apple_lock_button.dart';
 
 import 'features/auth/views/login_page.dart';
 import 'features/landing/landing_page.dart';
@@ -41,7 +40,7 @@ class InnerKidApp extends StatelessWidget {
         title: 'Inner Kid',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          primarySwatch: Colors.purple,
+          primarySwatch: Colors.green,
           primaryColor: const Color.fromARGB(255, 135, 234, 102),
           scaffoldBackgroundColor: const Color(0xFFF8F9FA),
           fontFamily: GoogleFonts.nunito().fontFamily,
@@ -53,7 +52,7 @@ class InnerKidApp extends StatelessWidget {
           ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF667EEA),
+              backgroundColor: const Color.fromARGB(255, 165, 228, 75),
               foregroundColor: Colors.white,
               elevation: 2,
               shape: RoundedRectangleBorder(
@@ -62,7 +61,7 @@ class InnerKidApp extends StatelessWidget {
             ),
           ),
         ),
-        home: const SplashPage(),
+        home: const LandingPage(),
         routes: {
           '/splash': (context) => const SplashPage(),
           '/landing': (context) => const LandingPage(),

@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:inner_kid/core/constants/assets.dart';
+import 'package:inner_kid/core/extension/ui_helper_extensions.dart';
 import 'package:inner_kid/core/helper/gap.dart';
 import 'package:inner_kid/core/theme/theme.dart';
-import 'package:inner_kid/core/constants/assets.dart';
-import 'package:inner_kid/core/constants/radius.dart';
-import 'package:inner_kid/core/extension/ui_helper_extensions.dart';
-import 'package:inner_kid/features/first_analysis/first_analysis_page.dart';
 import 'package:inner_kid/features/landing/components/analysis_card.dart';
-import 'package:inner_kid/widgets/action_menu.dart';
+import 'package:inner_kid/features/onboarding/views/onboarding_flow_page.dart';
 import 'package:lottie/lottie.dart';
-import '../auth/views/login_page.dart';
 
 class LandingPage extends ConsumerStatefulWidget {
   const LandingPage({super.key});
@@ -153,7 +150,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
 
                     // Main title
                     Text(
-                      'Çocuk Çizimlerinde\nGizli Mesajlar',
+                      'Çocuğunuzun iç dünyasını daha iyi anlamak ister misiniz?',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.poppins(
                         fontSize: 28,
@@ -292,10 +289,10 @@ class _LandingPageState extends ConsumerState<LandingPage>
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pushReplacement(
+                    Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const FirstAnalysisPage(),
+                        builder: (context) => const OnboardingFlowPage(),
                       ),
                     );
                   },
@@ -311,7 +308,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Analiz Başlat',
+                        'İç Dünyasını Anlayın',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,

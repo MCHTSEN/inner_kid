@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../../../core/theme/theme.dart';
 
 /// Premium app bar with feature-gated buttons
@@ -25,63 +26,22 @@ class PremiumAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(
-            color: Color(0xFFE2E8F0),
-            width: 1,
-          ),
+    return AppBar(
+      title: Text(
+        'Analiz Sonuçları',
+        style: GoogleFonts.poppins(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: AppTheme.textPrimary,
         ),
       ),
-      child: Row(
-        children: [
-          // Back button
-          IconButton(
-            onPressed: onBackPressed ?? () => Navigator.pop(context),
-            icon: const Icon(
-              Icons.arrow_back_ios,
-              color: AppTheme.textPrimary,
-            ),
-          ),
-
-          // Title
-          Expanded(
-            child: Center(
-              child: Text(
-                'Analiz Sonuçları',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-            ),
-          ),
-
-          // Action buttons
-          Row(
-            children: [
-              _buildPremiumActionButton(
-                icon: Icons.share,
-                onPressed:
-                    isPremiumUnlocked ? onSharePressed : onPaywallTrigger,
-                tooltip:
-                    isPremiumUnlocked ? 'Sonuçları Paylaş' : 'Premium gerekli',
-              ),
-              const SizedBox(width: 8),
-              _buildPremiumActionButton(
-                icon: Icons.bookmark,
-                onPressed: isPremiumUnlocked ? onSavePressed : onPaywallTrigger,
-                tooltip:
-                    isPremiumUnlocked ? 'Sonuçları Kaydet' : 'Premium gerekli',
-              ),
-            ],
-          ),
-        ],
-      ),
+      actions: [
+        _buildPremiumActionButton(
+          icon: Icons.share,
+          onPressed: isPremiumUnlocked ? onSharePressed : onPaywallTrigger,
+          tooltip: isPremiumUnlocked ? 'Sonuçları Paylaş' : 'Premium gerekli',
+        ),
+      ],
     );
   }
 
