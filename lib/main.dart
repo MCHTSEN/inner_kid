@@ -2,9 +2,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:inner_kid/core/helper/keyboard_unfocus.dart';
 import 'package:inner_kid/core/navigation/main_navigation.dart';
+import 'package:inner_kid/core/theme/my_theme.dart';
 
 import 'features/auth/views/login_page.dart';
 import 'features/landing/landing_page.dart';
@@ -39,28 +39,7 @@ class InnerKidApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Inner Kid',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          primarySwatch: Colors.green,
-          primaryColor: const Color.fromARGB(255, 135, 234, 102),
-          scaffoldBackgroundColor: const Color(0xFFF8F9FA),
-          fontFamily: GoogleFonts.nunito().fontFamily,
-          visualDensity: VisualDensity.adaptivePlatformDensity,
-          appBarTheme: const AppBarTheme(
-            backgroundColor: Colors.white,
-            foregroundColor: Color(0xFF2D3748),
-            elevation: 0,
-          ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color.fromARGB(255, 165, 228, 75),
-              foregroundColor: Colors.white,
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ),
+        theme: MyTheme.lightTheme,
         home: const LandingPage(),
         routes: {
           '/splash': (context) => const SplashPage(),

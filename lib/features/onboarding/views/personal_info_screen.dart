@@ -77,8 +77,13 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppTheme.backgroundGradient,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.lightGreenAccent.withValues(alpha: 0.3),
+              Colors.lightGreenAccent.withValues(alpha: 0.5),
+            ],
+          ),
         ),
         child: SafeArea(
           child: Column(
@@ -244,10 +249,8 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
 
   Widget _buildNameInput(OnboardingState state) {
     return TextField(
-      decoration: InputDecoration(
+      decoration: const InputDecoration(
         hintText: 'Çocuğunuzun adını girin',
-        filled: true,
-        fillColor: AppTheme.surfaceColor,
       ),
       style: GoogleFonts.poppins(
         fontSize: 16,
@@ -266,9 +269,7 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
   Widget _buildNumberInput(String field, OnboardingState state) {
     return TextField(
       decoration: InputDecoration(
-        hintText: 'Yaşını girin',
-        filled: true,
-        fillColor: AppTheme.surfaceColor,
+        hintText: field == 'age' ? 'Yaşını girin' : 'Kardeş sayısını girin',
       ),
       style: GoogleFonts.poppins(
         fontSize: 16,
