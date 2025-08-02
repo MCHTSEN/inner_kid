@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:inner_kid/core/theme/theme.dart';
 
-import '../viewmodels/onboarding_viewmodel.dart';
 import '../components/social_proof_widget.dart';
+import '../viewmodels/onboarding_viewmodel.dart';
 
 class FakeLoadingScreen extends ConsumerStatefulWidget {
   const FakeLoadingScreen({super.key});
@@ -56,7 +56,7 @@ class _FakeLoadingScreenState extends ConsumerState<FakeLoadingScreen>
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(onboardingViewModelProvider);
-    
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -70,7 +70,8 @@ class _FakeLoadingScreenState extends ConsumerState<FakeLoadingScreen>
                 // Header
                 Row(
                   children: [
-                    const SizedBox(width: 48), // For alignment with back button space
+                    const SizedBox(
+                        width: 48), // For alignment with back button space
                     const Spacer(),
                     Text(
                       'Analiz Ediliyor',
@@ -110,7 +111,8 @@ class _FakeLoadingScreenState extends ConsumerState<FakeLoadingScreen>
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                        color: AppTheme.primaryColor.withOpacity(0.3),
+                                        color: AppTheme.primaryColor
+                                            .withOpacity(0.3),
                                         width: 4,
                                       ),
                                     ),
@@ -161,21 +163,24 @@ class _FakeLoadingScreenState extends ConsumerState<FakeLoadingScreen>
 
                       // Social proof messages
                       const SocialProofWidget(
-                        title: 'Psikologlar ve pedagoglar ile birlikte geliştirildi.',
+                        title:
+                            'Psikologlar ve pedagoglar ile birlikte geliştirildi.',
                         icon: Icons.school_outlined,
                       ),
-                      
+
                       const SizedBox(height: 12),
-                      
+
                       const SocialProofWidget(
-                        title: '10.000+ çocuk çizimleri üzerinden duygusal analiz yapıldı.',
+                        title:
+                            '10.000+ çocuk çizimleri üzerinden duygusal analiz yapıldı.',
                         icon: Icons.analytics_outlined,
                       ),
-                      
+
                       const SizedBox(height: 12),
-                      
+
                       const SocialProofWidget(
-                        title: '12.000+ anne-baba uygulamayı aktif olarak kullanıyor.',
+                        title:
+                            '22.400+ anne-baba uygulamayı aktif olarak kullanıyor.',
                         icon: Icons.family_restroom_outlined,
                       ),
                     ],
@@ -192,8 +197,8 @@ class _FakeLoadingScreenState extends ConsumerState<FakeLoadingScreen>
                   ),
                   child: Text(
                     state.childName != null
-                        ? '12.000+ çocuk, çizimleriyle duygusal gelişim yolculuğunda. ${state.childName} için ilk adımı atalım mı?'
-                        : '12.000+ çocuk, çizimleriyle duygusal gelişim yolculuğunda. İlk adımı atalım mı?',
+                        ? '22.400+ çocuk, çizimleriyle duygusal gelişim yolculuğunda. ${state.childName} için ilk adımı atalım mı?'
+                        : '22.400+ çocuk, çizimleriyle duygusal gelişim yolculuğunda. İlk adımı atalım mı?',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
                       fontSize: 14,

@@ -1,86 +1,119 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:inner_kid/core/theme/theme.dart';
-import 'dart:io';
 
-import '../viewmodels/onboarding_viewmodel.dart';
 import '../models/onboarding_state.dart';
+import '../viewmodels/onboarding_viewmodel.dart';
 
-class ImageUploadScreen extends ConsumerWidget {
+class ImageUploadScreen extends ConsumerStatefulWidget {
   const ImageUploadScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ImageUploadScreen> createState() => _ImageUploadScreenState();
+}
+
+class _ImageUploadScreenState extends ConsumerState<ImageUploadScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(-1.0, 0.0), // Slide from left
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutCubic,
+    ));
+
+    // Start animation when screen loads
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(onboardingViewModelProvider);
-    
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
           gradient: AppTheme.backgroundGradient,
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              children: [
-                // Header with back button
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        ref.read(onboardingViewModelProvider.notifier).previousStep();
-                      },
-                      icon: const Icon(Icons.arrow_back, color: AppTheme.textPrimary),
-                    ),
-                    const Spacer(),
-                    const SizedBox(width: 48), // For alignment
-                  ],
-                ),
-
-                // Main content
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+          child: SlideTransition(
+            position: _slideAnimation,
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  // Header without back button
+                  Row(
                     children: [
-                      // Illustration or uploaded image
-                      _buildImageSection(state),
-
-                      const SizedBox(height: 32),
-
-                      // Title
-                      Text(
-                        state.childName != null 
-                            ? '${state.childName}\'nin ilk çizimini yükle, iç dünyasına birlikte bakalım.'
-                            : 'Çocuğunuzun ilk çizimini yükle, iç dünyasına birlikte bakalım.',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textPrimary,
-                          height: 1.4,
-                        ),
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // Description
-                      Text(
-                        'Çocuğunuzun duygusal gelişimini anlamak için çizimini yükleyin',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          color: AppTheme.textSecondary,
-                          height: 1.5,
-                        ),
-                      ),
+                      const SizedBox(width: 48), // For alignment
+                      const Spacer(),
+                      const SizedBox(width: 48), // For alignment
                     ],
                   ),
-                ),
 
-                // Action buttons
-                _buildActionButtons(ref, state),
-              ],
+                  // Main content
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Illustration or uploaded image
+                        _buildImageSection(state),
+
+                        const SizedBox(height: 32),
+
+                        // Title
+                        Text(
+                          state.childName != null
+                              ? '${state.childName} için ilk çizimi yükle, iç dünyasına birlikte bakalım.'
+                              : 'Çocuğunuzun ilk çizimini yükle, iç dünyasına birlikte bakalım.',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textPrimary,
+                            height: 1.4,
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Description
+                        Text(
+                          'Çocuğunuzun duygusal gelişimini anlamak için çizimini yükleyin',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color: AppTheme.textSecondary,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Action buttons
+                  _buildActionButtons(ref, state),
+                ],
+              ),
             ),
           ),
         ),
@@ -152,8 +185,8 @@ class ImageUploadScreen extends ConsumerWidget {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: state.isLoading 
-                ? null 
+            onPressed: state.isLoading
+                ? null
                 : () {
                     ref.read(onboardingViewModelProvider.notifier).pickImage();
                   },
@@ -178,7 +211,9 @@ class ImageUploadScreen extends ConsumerWidget {
                       const Icon(Icons.upload_file, color: Colors.white),
                       const SizedBox(width: 8),
                       Text(
-                        state.imageUrl != null ? 'Yeniden Yükle' : 'Galeriden Seç',
+                        state.imageUrl != null
+                            ? 'Yeniden Yükle'
+                            : 'Galeriden Seç',
                         style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -195,8 +230,8 @@ class ImageUploadScreen extends ConsumerWidget {
         SizedBox(
           width: double.infinity,
           child: OutlinedButton(
-            onPressed: state.isLoading 
-                ? null 
+            onPressed: state.isLoading
+                ? null
                 : () {
                     // TODO: Implement camera capture
                     // For now, we'll just show a message

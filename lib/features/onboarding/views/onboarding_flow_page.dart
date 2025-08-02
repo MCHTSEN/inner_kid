@@ -7,8 +7,8 @@ import '../viewmodels/onboarding_viewmodel.dart';
 import 'fake_loading_screen.dart';
 import 'fake_results_screen.dart';
 import 'image_upload_screen.dart';
-import 'social_proof_screen.dart';
 import 'personal_info_screen.dart';
+import 'social_proof_screen.dart';
 
 class OnboardingFlowPage extends ConsumerWidget {
   const OnboardingFlowPage({super.key});
@@ -41,8 +41,6 @@ class OnboardingFlowPage extends ConsumerWidget {
         return const FakeResultsScreen();
       case OnboardingStep.realResults:
         return const FakeResultsScreen(); // For now, use fake results
-      default:
-        return const SocialProofScreen();
     }
   }
 }

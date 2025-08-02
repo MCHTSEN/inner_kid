@@ -28,6 +28,15 @@ void main() async {
       child: InnerKidApp(),
     ),
   );
+
+  // runApp(
+  //   DevicePreview(
+  //     enabled: true, // Debug modunda aktif olsun
+  //     builder: (context) => const ProviderScope(
+  //       child: InnerKidApp(),
+  //     ),
+  //   ),
+  // );
 }
 
 class InnerKidApp extends StatelessWidget {

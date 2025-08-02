@@ -1,7 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:logger/logger.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'package:logger/logger.dart';
+import 'package:video_player/video_player.dart';
 
 import '../models/onboarding_state.dart';
 
@@ -9,18 +10,131 @@ class OnboardingViewModel extends StateNotifier<OnboardingState> {
   final Logger _logger = Logger();
   final ImagePicker _picker = ImagePicker();
 
+  // Questions list as static constant
+  static const List<Map<String, dynamic>> questions = [
+    {
+      'question': 'Çocuğunuzun adı nedir?',
+      'type': 'text',
+      'field': 'name',
+    },
+    {
+      'question': 'Kaç yaşında?',
+      'type': 'number',
+      'field': 'age',
+    },
+    {
+      'question': 'Cinsiyeti nedir?',
+      'type': 'gender',
+      'field': 'gender',
+    },
+    {
+      'question': 'Kaç kardeşi var?',
+      'type': 'number',
+      'field': 'siblings',
+    },
+    {
+      'question': 'Anaokuluna veya okula gidiyor mu?',
+      'type': 'boolean',
+      'field': 'school',
+    },
+  ];
+
   OnboardingViewModel() : super(OnboardingState.initial());
+
+  // Personal Info Screen Methods
+  void initializePageController() {
+    if (state.pageController == null) {
+      final pageController = PageController();
+      state = state.copyWith(pageController: pageController);
+
+      // Initialize with existing data if available
+      int initialPage = 0;
+      if (state.childName != null) initialPage = 1;
+      if (state.childAge != null) initialPage = 2;
+      if (state.childGender != null) initialPage = 3;
+      if (state.siblingCount != null) initialPage = 4;
+      if (state.attendsSchool != null) initialPage = 5;
+
+      if (initialPage > 0) {
+        state = state.copyWith(currentPageIndex: initialPage);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          pageController.jumpToPage(initialPage);
+        });
+      }
+    }
+  }
+
+  Future<void> initializeVideoController() async {
+    if (state.videoController == null) {
+      final videoController =
+          VideoPlayerController.asset('assets/video/girl_drawing.mp4');
+      state = state.copyWith(videoController: videoController);
+
+      await videoController.initialize();
+      videoController.play();
+
+      // Loop video
+      videoController.addListener(() {
+        if (videoController.value.position >= videoController.value.duration) {
+          videoController.seekTo(Duration.zero);
+          videoController.play();
+        }
+      });
+    }
+  }
+
+  void disposeVideoController() {
+    state.videoController?.dispose();
+    state = state.copyWith(videoController: null);
+  }
+
+  void nextPage() {
+    // Check if we're on the last question
+    if (state.currentPageIndex == questions.length - 1) {
+      // Last question answered, move to social proof section
+      state = state.copyWith(currentPageIndex: state.currentPageIndex + 1);
+      state.pageController?.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } else if (state.currentPageIndex < questions.length) {
+      // Regular page navigation
+      state = state.copyWith(currentPageIndex: state.currentPageIndex + 1);
+      state.pageController?.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } else if (state.currentPageIndex == questions.length) {
+      // Social proof section, move to next step
+      if (state.isPersonalInfoComplete) {
+        nextStep();
+      }
+    }
+  }
+
+  void previousPage() {
+    if (state.currentPageIndex > 0) {
+      state = state.copyWith(currentPageIndex: state.currentPageIndex - 1);
+      state.pageController?.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      previousStep();
+    }
+  }
 
   void nextStep() {
     _logger.d('Next step called. Current step: ${state.currentStep}');
-    
+
     switch (state.currentStep) {
       case OnboardingStep.intro:
         state = state.copyWith(currentStep: OnboardingStep.personalInfo);
         break;
       case OnboardingStep.personalInfo:
         if (state.isPersonalInfoComplete) {
-          state = state.copyWith(currentStep: OnboardingStep.imageUpload);
+          // Use replacement navigation to prevent going back
+          _replaceWithImageUpload();
         }
         break;
       case OnboardingStep.imageUpload:
@@ -41,15 +155,21 @@ class OnboardingViewModel extends StateNotifier<OnboardingState> {
     }
   }
 
+  void _replaceWithImageUpload() {
+    // Reset the navigation stack and go directly to image upload
+    state = state.copyWith(currentStep: OnboardingStep.imageUpload);
+    _logger.d('Replaced navigation stack with image upload');
+  }
+
   void previousStep() {
     _logger.d('Previous step called. Current step: ${state.currentStep}');
-    
+
     switch (state.currentStep) {
       case OnboardingStep.personalInfo:
         state = state.copyWith(currentStep: OnboardingStep.intro);
         break;
       case OnboardingStep.imageUpload:
-        state = state.copyWith(currentStep: OnboardingStep.personalInfo);
+        // Cannot go back from image upload
         break;
       case OnboardingStep.fakeLoading:
         state = state.copyWith(currentStep: OnboardingStep.imageUpload);
@@ -89,7 +209,7 @@ class OnboardingViewModel extends StateNotifier<OnboardingState> {
   Future<void> pickImage() async {
     try {
       state = state.copyWith(isLoading: true, errorMessage: null);
-      
+
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
         maxWidth: 1024,
@@ -125,6 +245,13 @@ class OnboardingViewModel extends StateNotifier<OnboardingState> {
 
   void reset() {
     state = OnboardingState.initial();
+  }
+
+  @override
+  void dispose() {
+    disposeVideoController();
+    state.pageController?.dispose();
+    super.dispose();
   }
 }
 

@@ -1,4 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:inner_kid/core/models/child_profile.dart';
+import 'package:video_player/video_player.dart';
+
+import '../viewmodels/onboarding_viewmodel.dart';
 
 enum OnboardingStep {
   intro,
@@ -20,6 +24,11 @@ class OnboardingState {
   final bool isLoading;
   final String? errorMessage;
 
+  // Personal Info Screen State
+  final int currentPageIndex;
+  final PageController? pageController;
+  final VideoPlayerController? videoController;
+
   OnboardingState({
     required this.currentStep,
     this.childName,
@@ -30,6 +39,9 @@ class OnboardingState {
     this.imageUrl,
     this.isLoading = false,
     this.errorMessage,
+    this.currentPageIndex = 0,
+    this.pageController,
+    this.videoController,
   });
 
   factory OnboardingState.initial() {
@@ -48,6 +60,9 @@ class OnboardingState {
     String? imageUrl,
     bool? isLoading,
     String? errorMessage,
+    int? currentPageIndex,
+    PageController? pageController,
+    VideoPlayerController? videoController,
   }) {
     return OnboardingState(
       currentStep: currentStep ?? this.currentStep,
@@ -59,6 +74,9 @@ class OnboardingState {
       imageUrl: imageUrl ?? this.imageUrl,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage ?? this.errorMessage,
+      currentPageIndex: currentPageIndex ?? this.currentPageIndex,
+      pageController: pageController ?? this.pageController,
+      videoController: videoController ?? this.videoController,
     );
   }
 
@@ -66,11 +84,11 @@ class OnboardingState {
     if (childName == null || childAge == null || childGender == null) {
       return null;
     }
-    
+
     // Calculate birth date based on age
     final now = DateTime.now();
     final birthDate = DateTime(now.year - childAge!, now.month, now.day);
-    
+
     return ChildProfile(
       id: '', // Will be set when saved
       userId: '', // Will be set when saved
@@ -83,10 +101,43 @@ class OnboardingState {
   }
 
   bool get isPersonalInfoComplete {
-    return childName != null && 
-           childAge != null && 
-           childGender != null && 
-           siblingCount != null && 
-           attendsSchool != null;
+    return childName != null &&
+        childAge != null &&
+        childGender != null &&
+        siblingCount != null &&
+        attendsSchool != null;
+  }
+
+  bool isCurrentPageValid() {
+    // Social proof section (index 4) doesn't require answers
+    if (currentPageIndex == 4) {
+      return true;
+    }
+
+    // Adjust index for social proof section
+    int questionIndex = currentPageIndex;
+    if (questionIndex > 4) questionIndex--;
+
+    if (questionIndex < 0 ||
+        questionIndex >= OnboardingViewModel.questions.length) {
+      return true; // Social proof section doesn't require answers
+    }
+
+    final question = OnboardingViewModel.questions[questionIndex];
+
+    switch (question['field']) {
+      case 'name':
+        return childName != null && childName!.isNotEmpty;
+      case 'age':
+        return childAge != null && childAge! > 0;
+      case 'gender':
+        return childGender != null && childGender!.isNotEmpty;
+      case 'siblings':
+        return siblingCount != null;
+      case 'school':
+        return attendsSchool != null;
+      default:
+        return false;
+    }
   }
 }

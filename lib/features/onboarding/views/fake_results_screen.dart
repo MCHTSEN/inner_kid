@@ -64,7 +64,7 @@ class _FakeResultsScreenState extends ConsumerState<FakeResultsScreen>
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(onboardingViewModelProvider);
-    
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -75,15 +75,10 @@ class _FakeResultsScreenState extends ConsumerState<FakeResultsScreen>
             padding: const EdgeInsets.all(24),
             child: Column(
               children: [
-                // Header
+                // Header without back button
                 Row(
                   children: [
-                    IconButton(
-                      onPressed: () {
-                        ref.read(onboardingViewModelProvider.notifier).previousStep();
-                      },
-                      icon: const Icon(Icons.arrow_back, color: AppTheme.textPrimary),
-                    ),
+                    const SizedBox(width: 48), // For alignment
                     const Spacer(),
                     Text(
                       'Analiz Sonuçları',
@@ -129,7 +124,8 @@ class _FakeResultsScreenState extends ConsumerState<FakeResultsScreen>
                                   color: AppTheme.primaryColor.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(30),
                                   border: Border.all(
-                                    color: AppTheme.primaryColor.withOpacity(0.3),
+                                    color:
+                                        AppTheme.primaryColor.withOpacity(0.3),
                                   ),
                                 ),
                                 child: const Icon(
@@ -153,8 +149,8 @@ class _FakeResultsScreenState extends ConsumerState<FakeResultsScreen>
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      state.childAge != null 
-                                          ? '${state.childAge} yaşında' 
+                                      state.childAge != null
+                                          ? '${state.childAge} yaşında'
                                           : 'Yaş bilgisi yok',
                                       style: GoogleFonts.poppins(
                                         fontSize: 14,
@@ -199,7 +195,8 @@ class _FakeResultsScreenState extends ConsumerState<FakeResultsScreen>
                                             Container(
                                               padding: const EdgeInsets.all(8),
                                               decoration: BoxDecoration(
-                                                color: AppTheme.primaryColor.withOpacity(0.1),
+                                                color: AppTheme.primaryColor
+                                                    .withOpacity(0.1),
                                                 shape: BoxShape.circle,
                                               ),
                                               child: const Icon(
@@ -220,16 +217,16 @@ class _FakeResultsScreenState extends ConsumerState<FakeResultsScreen>
                                           ],
                                         ),
                                         const SizedBox(height: 16),
-                                        
+
                                         // Blurred content
                                         _buildBlurredText(
                                           state.childName != null
                                               ? '${state.childName}\'nin çiziminde hayal gücü ve içsel keşifler dikkat çekiyor.'
                                               : 'Çocuğunuzun çiziminde hayal gücü ve içsel keşifler dikkat çekiyor.',
                                         ),
-                                        
+
                                         const SizedBox(height: 16),
-                                        
+
                                         _buildBlurredText(
                                           'Renk seçimleri duygusal ifade konusunda olumlu bir gelişim gösteriyor.',
                                         ),
@@ -260,7 +257,8 @@ class _FakeResultsScreenState extends ConsumerState<FakeResultsScreen>
                                             Container(
                                               padding: const EdgeInsets.all(8),
                                               decoration: BoxDecoration(
-                                                color: AppTheme.accentColor.withOpacity(0.1),
+                                                color: AppTheme.accentColor
+                                                    .withOpacity(0.1),
                                                 shape: BoxShape.circle,
                                               ),
                                               child: const Icon(
@@ -281,13 +279,10 @@ class _FakeResultsScreenState extends ConsumerState<FakeResultsScreen>
                                           ],
                                         ),
                                         const SizedBox(height: 16),
-                                        
                                         _buildBlurredText(
                                           'Çizimde pozitif duygusal ifadeler gözlemlenmektedir.',
                                         ),
-                                        
                                         const SizedBox(height: 12),
-                                        
                                         _buildBlurredText(
                                           'Güven hissi ve mutlu ruh hali yansıtılmaktadır.',
                                         ),
@@ -318,7 +313,8 @@ class _FakeResultsScreenState extends ConsumerState<FakeResultsScreen>
                                             Container(
                                               padding: const EdgeInsets.all(8),
                                               decoration: BoxDecoration(
-                                                color: AppTheme.warningColor.withOpacity(0.1),
+                                                color: AppTheme.warningColor
+                                                    .withOpacity(0.1),
                                                 shape: BoxShape.circle,
                                               ),
                                               child: const Icon(
@@ -339,13 +335,10 @@ class _FakeResultsScreenState extends ConsumerState<FakeResultsScreen>
                                           ],
                                         ),
                                         const SizedBox(height: 16),
-                                        
                                         _buildBlurredText(
                                           'Motor beceri gelişimi yaşına uygun seviyededir.',
                                         ),
-                                        
                                         const SizedBox(height: 12),
-                                        
                                         _buildBlurredText(
                                           'Yaratıcı ifade becerileri gelişim sürecindedir.',
                                         ),
@@ -369,7 +362,9 @@ class _FakeResultsScreenState extends ConsumerState<FakeResultsScreen>
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
-                        ref.read(onboardingViewModelProvider.notifier).nextStep();
+                        ref
+                            .read(onboardingViewModelProvider.notifier)
+                            .nextStep();
                       },
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
