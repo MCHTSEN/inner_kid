@@ -93,9 +93,8 @@ flutter:
 #   adaptive_icon_foreground: "assets/icons/islami_app_icon.jpg"
 #   min_sdk_android: 21 # Android sdk min version
 
-
 icons_launcher:
-  image_path: "assets/brand/inner_logo_3.png"
+  image_path: "assets/brand/innerkid_logo_1.png"
   platforms:
     android:
       enable: true

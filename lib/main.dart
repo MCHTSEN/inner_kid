@@ -5,13 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_kid/core/helper/keyboard_unfocus.dart';
 import 'package:inner_kid/core/navigation/main_navigation.dart';
 import 'package:inner_kid/core/theme/my_theme.dart';
+import 'package:logger/logger.dart';
 
 import 'features/auth/views/login_page.dart';
 import 'features/landing/landing_page.dart';
 import 'features/splash/splash_page.dart';
 import 'firebase_options.dart';
 
-// ...
+Logger logger = Logger();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
