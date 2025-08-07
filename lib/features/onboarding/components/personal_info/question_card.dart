@@ -93,15 +93,7 @@ class QuestionCard extends ConsumerWidget {
 
     return Column(
       children: [
-        Text(
-          'Kardeş sayısını seçin',
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            color: AppTheme.textSecondary,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 24),
+     
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -164,15 +156,6 @@ class QuestionCard extends ConsumerWidget {
 
     return Column(
       children: [
-        Text(
-          'Yaşını seçin',
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            color: AppTheme.textSecondary,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 24),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -233,15 +216,6 @@ class QuestionCard extends ConsumerWidget {
 
     return Column(
       children: [
-        Text(
-          'Cinsiyetini seçin',
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            color: AppTheme.textSecondary,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 24),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -302,15 +276,6 @@ class QuestionCard extends ConsumerWidget {
 
     return Column(
       children: [
-        Text(
-          'Anaokuluna veya okula gidiyor mu?',
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            color: AppTheme.textSecondary,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 24),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),

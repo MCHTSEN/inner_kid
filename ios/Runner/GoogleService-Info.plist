@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.innerKid</string>
+	<string>com.innerKid</string>
 	<key>PROJECT_ID</key>
 	<string>inner-f07d5</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:405697028400:ios:f85fa75c95449cd4d2e8f5</string>
+	<string>1:405697028400:ios:da626b800653fce4d2e8f5</string>
 </dict>
 </plist>

@@ -7,7 +7,10 @@ import 'package:inner_kid/core/helper/gap.dart';
 import 'package:inner_kid/core/theme/theme.dart';
 import 'package:inner_kid/features/landing/components/analysis_card.dart';
 import 'package:inner_kid/features/onboarding/views/onboarding_flow_page.dart';
+import 'package:inner_kid/features/subscription/revenuecat_sevices.dart';
+import 'package:inner_kid/main.dart';
 import 'package:lottie/lottie.dart';
+import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 
 class LandingPage extends ConsumerStatefulWidget {
   const LandingPage({super.key});
@@ -28,6 +31,14 @@ class _LandingPageState extends ConsumerState<LandingPage>
     super.initState();
     _initAnimations();
     _startAnimations();
+    presentPaywall();
+  }
+
+  Future<void> presentPaywall() async {
+    final isPro = await RevenueCatServices.isProUser();
+
+    final paywallResult = await RevenueCatUI.presentPaywallIfNeeded('aa');
+    logger.d('Paywall result: $paywallResult');
   }
 
   void _initAnimations() {

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:inner_kid/core/widgets/floating_bottom_nav.dart';
-import 'package:inner_kid/features/animation/views/animation_page.dart';
-import 'package:inner_kid/features/profile/views/profile_page.dart';
-import 'package:inner_kid/features/home_dashboard/views/home_dashboard_page.dart';
 import 'package:inner_kid/features/analysis/views/analysis_page.dart';
+import 'package:inner_kid/features/animation/views/animation_page.dart';
 import 'package:inner_kid/features/drawing_tests/views/drawing_tests_page.dart';
-import 'package:inner_kid/features/recommendations/views/recommendations_page.dart';
+import 'package:inner_kid/features/home_dashboard/views/home_dashboard_page.dart';
+import 'package:inner_kid/features/profile/views/profile_page.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});

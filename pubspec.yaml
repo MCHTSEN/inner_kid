@@ -59,7 +59,10 @@ dependencies:
 
   # HTTP client
   http: ^1.2.2
+
+  # RevenueCat
   purchases_flutter: ^9.1.0
+  purchases_ui_flutter: ^9.1.0
 
   icons_launcher: ^3.0.1
 

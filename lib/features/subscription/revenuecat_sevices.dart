@@ -2,11 +2,11 @@ import 'package:inner_kid/main.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
 class RevenueCatServices {
-  
+  static const String _apiKeyIOS = 'appl_NpHHFBTUgQZTkHhfeJXcdlvxPUE';
   // Configure RevenueCat
-  static Future<void> configureRevenueCat(String apiKey) async {
+  static Future<void> configureRevenueCat() async {
     try {
-      await Purchases.configure(PurchasesConfiguration(apiKey));
+      await Purchases.configure(PurchasesConfiguration(_apiKeyIOS));
       logger.d('RevenueCat configured');
     } catch (e) {
       logger.e('RevenueCat configuration failed: $e');
@@ -28,7 +28,8 @@ class RevenueCatServices {
   // PURCHASE A PACKAGE
   static Future<CustomerInfo?> purchasePackage(Package package) async {
     try {
-      final PurchaseResult purchaseResult = await Purchases.purchasePackage(package);
+      final PurchaseResult purchaseResult =
+          await Purchases.purchasePackage(package);
       final CustomerInfo customerInfo = purchaseResult.customerInfo;
       logger.d('Package purchased: $package');
       return customerInfo;

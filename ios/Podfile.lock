@@ -1483,10 +1483,18 @@ PODS:
   - purchases_flutter (9.1.0):
     - Flutter
     - PurchasesHybridCommon (= 16.0.2)
+  - purchases_ui_flutter (9.1.0):
+    - Flutter
+    - PurchasesHybridCommonUI (= 16.0.2)
   - PurchasesHybridCommon (16.0.2):
     - RevenueCat (= 5.33.1)
+  - PurchasesHybridCommonUI (16.0.2):
+    - PurchasesHybridCommon (= 16.0.2)
+    - RevenueCatUI (= 5.33.1)
   - RecaptchaInterop (101.0.0)
   - RevenueCat (5.33.1)
+  - RevenueCatUI (5.33.1):
+    - RevenueCat (= 5.33.1)
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -1508,6 +1516,7 @@ DEPENDENCIES:
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - purchases_flutter (from `.symlinks/plugins/purchases_flutter/ios`)
+  - purchases_ui_flutter (from `.symlinks/plugins/purchases_ui_flutter/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
   - sqflite_darwin (from `.symlinks/plugins/sqflite_darwin/darwin`)
   - video_player_avfoundation (from `.symlinks/plugins/video_player_avfoundation/darwin`)
@@ -1542,8 +1551,10 @@ SPEC REPOS:
     - nanopb
     - PromisesObjC
     - PurchasesHybridCommon
+    - PurchasesHybridCommonUI
     - RecaptchaInterop
     - RevenueCat
+    - RevenueCatUI
 
 EXTERNAL SOURCES:
   cloud_firestore:
@@ -1566,6 +1577,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
   purchases_flutter:
     :path: ".symlinks/plugins/purchases_flutter/ios"
+  purchases_ui_flutter:
+    :path: ".symlinks/plugins/purchases_ui_flutter/ios"
   shared_preferences_foundation:
     :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
   sqflite_darwin:
@@ -1611,9 +1624,12 @@ SPEC CHECKSUMS:
   path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   purchases_flutter: 64ee2e891cdc4ed480f703f82682336da57c6fe0
+  purchases_ui_flutter: 56de97bfe5f3d371ad3d59012f0cb52cb5479676
   PurchasesHybridCommon: ae7a0a6e105ecdde3e8816a004e57f0a2a7b9261
+  PurchasesHybridCommonUI: f94430070f5ec1cc9513666402871dc70f42ec36
   RecaptchaInterop: 11e0b637842dfb48308d242afc3f448062325aba
   RevenueCat: b0ed01125b05a45b8264a2951ad68acb61942038
+  RevenueCatUI: e6fad6a8bec67d910da78cd171328f1104afea77
   shared_preferences_foundation: fcdcbc04712aee1108ac7fda236f363274528f78
   sqflite_darwin: 5a7236e3b501866c1c9befc6771dfd73ffb8702d
   video_player_avfoundation: 7c6c11d8470e1675df7397027218274b6d2360b3

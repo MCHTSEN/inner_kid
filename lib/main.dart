@@ -5,11 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_kid/core/helper/keyboard_unfocus.dart';
 import 'package:inner_kid/core/navigation/main_navigation.dart';
 import 'package:inner_kid/core/theme/my_theme.dart';
+import 'package:inner_kid/features/subscription/presentation/hard_paywall.dart';
 import 'package:logger/logger.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 import 'features/auth/views/login_page.dart';
 import 'features/landing/landing_page.dart';
 import 'features/splash/splash_page.dart';
+import 'features/subscription/revenuecat_sevices.dart';
 import 'firebase_options.dart';
 
 Logger logger = Logger();
@@ -20,9 +23,14 @@ void main() async {
   // Load environment variables
   await dotenv.load(fileName: ".env");
 
+  await Purchases.setLogLevel(LogLevel.debug);
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Configure RevenueCat
+  await RevenueCatServices.configureRevenueCat();
 
   runApp(
     const ProviderScope(
@@ -31,6 +39,7 @@ void main() async {
   );
 
   // runApp(
+  
   //   DevicePreview(
   //     enabled: true, // Debug modunda aktif olsun
   //     builder: (context) => const ProviderScope(
@@ -50,7 +59,7 @@ class InnerKidApp extends StatelessWidget {
         title: 'Inner Kid',
         debugShowCheckedModeBanner: false,
         theme: MyTheme.lightTheme,
-        home: const LandingPage(),
+        home: const HardPaywall(),
         routes: {
           '/splash': (context) => const SplashPage(),
           '/landing': (context) => const LandingPage(),
@@ -61,3 +70,23 @@ class InnerKidApp extends StatelessWidget {
     );
   }
 }
+
+// class PaywallScreen extends ConsumerStatefulWidget {
+//   const PaywallScreen({super.key});
+
+//   @override
+//   ConsumerState<ConsumerStatefulWidget> createState() => _PaywallScreenState();
+// }
+
+// class _PaywallScreenState extends ConsumerState<PaywallScreen> {
+//   @override
+//   Widget build(BuildContext context) {
+//     final offeringAsync = ref.watch(currentOfferingProvider);
+
+//     return Scaffold(
+//       body: Center(
+//         child: offeringAsync.
+//       )
+//     );
+//   }
+// }
